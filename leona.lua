@@ -18,6 +18,11 @@ local myHero = myHero
 local LocalGameTimer = Game.Timer
 GamCore = _G.GamsteronCore
 
+local ESpells = {
+    ["TristanaR"] = {charName = "Tristana", slot = _R, displayName = "[R]Buster Shot"},
+    ["VayneCondemn"] = {charName = "Vayne", slot = _E, displayName = "[E]Condemn"},
+    ["BlindMonkRKick"] = {charName = "LeeSin", slot = _R, displayName = "[R]Dragon's Rage"}
+}
 local function IsValid(unit)
     if (unit 
         and unit.valid 
@@ -91,6 +96,16 @@ function Leona:LoadMenu()
     --Auto
     LL:MenuElement({type = MENU, id = "Auto", name = "Auto"})
     LL.Auto:MenuElement({id = "AutoIG", name = "Auto Ingite KS", value = true})
+    LL.Auto:MenuElement({id = "AotoEList", name = "Spell List", type = _G.MENU})
+    GamCore:OnEnemyHeroLoad(function(hero) 
+        for i, spell in pairs(ESpells) do
+            if not ESpells[i] then return end
+                if spell.charName == hero.charName and not LL.Auto.AotoEList[i] then
+                    LL.Auto.AotoEList:MenuElement({id = hero.charName, name = ""..spell.charName.." ".." | "..spell.displayName, value = true})
+                end
+        end
+    end)
+
     --LL.Auto:MenuElement({id = "AutoRR", name = "Auto R", value = true}) --use too much calculation power, not worth
     --LL.Auto:MenuElement({id = "AutoR", name = "[AutoR] Min enemies arount target", value = 2, min = 1 , max = 5})
 
@@ -99,7 +114,18 @@ function Leona:LoadMenu()
     LL.Drawing:MenuElement({id = "E", name = "Draw [E] Range", value = true})
     LL.Drawing:MenuElement({id = "R", name = "Draw [R] Range", value = true})
     LL.Drawing:MenuElement({id = "Num", name = "Draw Prediction Max Range", value = 100, min = 70 , max = 100})
-
+--[[
+    DelayAction(function()
+		for i, spell in pairs(ESpells) do
+			if not ESpells[i] then return end
+			for j, k in pairs(OB:GetEnemyHeroes()) do
+				if spell.charName == k.charName and not self.Menu.ESet.AotoEList[i] then
+					if not LL.Auto.AotoEList[i] then LL.Auto.AotoEList:MenuElement({id = "Dodge"..i, name = ""..spell.charName.." ".." | "..spell.displayName, value = true}) end
+				end
+			end
+		end
+    end, 0.01)   
+    --]]
 end
 
 function Leona:Draw()
@@ -309,6 +335,24 @@ function Leona:Auto()
         end
     end
     --if LL.Auto.AutoRR:Value() then
+
+    local EnemyHeroes = OB:GetEnemyHeroes(875, false)
+    for i = 1, #EnemyHeroes do
+        local hero = EnemyHeroes[i]
+        if hero.activeSpell.spellWasCast then
+        --print(hero.activeSpell.name)
+            if ESpells[hero.activeSpell.name] ~= nil then
+                if LL.Auto.AotoEList[hero.charName]:Value() and hero.activeSpell.target == myHero.handle then
+                    --print("targed")
+                    Control.CastSpell(HK_E, hero.pos)
+                end
+            end
+        end
+        
+    end
+
+
+
 
 
 end
