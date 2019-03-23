@@ -1,4 +1,4 @@
-local Version = 0.01
+local Version = 0.02
 local ScriptName = "Leona"
 
 if (myHero.charName ~= "Leona") then 
@@ -152,9 +152,7 @@ function Leona:Tick()
         self:Harass()
     end
     self:Auto()
-    if myHero.activeSpell.name ~= "LeonaZenithBlade" then
-        ORB:SetMovement(true)
-    end
+
 end
 
 function Leona:Combo()
@@ -187,7 +185,6 @@ function Leona:Combo()
             local Pred = GetGamsteronPrediction(target, self.EData, myHero)
             if Pred.Hitchance >= _G.HITCHANCE_HIGH then
                 Control.CastSpell(HK_E, Pred.CastPosition)
-                ORB:SetMovement(false)
             end
         end
 
@@ -269,7 +266,6 @@ function Leona:Harass()
             local Pred = GetGamsteronPrediction(target, self.EData, myHero)
             if Pred.Hitchance >= _G.HITCHANCE_HIGH then
                 Control.CastSpell(HK_E, Pred.CastPosition)
-                ORB:SetMovement(false)
             end
         end
 
