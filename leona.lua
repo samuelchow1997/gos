@@ -169,7 +169,7 @@ function Leona:Draw()
 end
 
 function Leona:Tick()
-    if myHero.dead then
+    if myHero.dead or Game.IsChatOpen() then
         return
     end
     if ORB.Modes[0] then --combo
