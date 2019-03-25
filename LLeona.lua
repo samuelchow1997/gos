@@ -12,7 +12,7 @@ do
     local Files = {
         Lua = {
             Path = SCRIPT_PATH,
-            Name = "PussyAIO.lua",
+            Name = "LLeona.lua",
             Url = "https://raw.githubusercontent.com/Pussykate/GoS/master/PussyAIO.lua"
         },
         Version = {
