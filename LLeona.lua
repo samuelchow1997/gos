@@ -1,4 +1,4 @@
-local Version = 0.04
+local Version = 0.05
 local ScriptName = "LLeona"
 
 if (myHero.charName ~= "Leona") then 
@@ -154,7 +154,7 @@ function Leona:LoadMenu()
     LL:MenuElement({type = MENU, id = "Drawing", name = "Drawing"})
     LL.Drawing:MenuElement({id = "E", name = "Draw [E] Range", value = true})
     LL.Drawing:MenuElement({id = "R", name = "Draw [R] Range", value = true})
-    LL.Drawing:MenuElement({id = "Num", name = "Draw Prediction Max Range", value = 100, min = 70 , max = 100})
+    --LL.Drawing:MenuElement({id = "Num", name = "Draw Prediction Max Range", value = 100, min = 70 , max = 100})
 
     LL:MenuElement({type = MENU, id = "Version", name = "Version: "..Version , type = SPACE})
 
@@ -166,24 +166,28 @@ function Leona:Draw()
     end
 
     if LL.Drawing.E:Value() and Ready(_E) then
-        Draw.Circle(myHero.pos, 875*LL.Drawing.Num:Value()/100,Draw.Color(80 ,0xFF,0xFF,0xFF))
+        Draw.Circle(myHero.pos, 875,Draw.Color(80 ,0xFF,0xFF,0xFF))
     end
     if LL.Drawing.R:Value() and Ready(_R) then
-        Draw.Circle(myHero.pos, 1200*LL.Drawing.Num:Value()/100,Draw.Color(255,255, 162, 000))
+        Draw.Circle(myHero.pos, 1200,Draw.Color(255,255, 162, 000))
     end
 end
 
+
+local NextTick = GetTickCount()
 function Leona:Tick()
     if myHero.dead or Game.IsChatOpen() or (ExtLibEvade and ExtLibEvade.Evading == true) then
         return
     end
 
+    self:Auto()
+    if NextTick > GetTickCount() then return end
+    ORB:SetMovement(true)
     if ORB.Modes[0] then --combo
         self:Combo()
     elseif ORB.Modes[1] then --harass
         self:Harass()
     end
-    self:Auto()
 
 end
 
@@ -215,6 +219,8 @@ function Leona:Combo()
         if LL.Combo.UseE:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 875 then
             local Pred = GetGamsteronPrediction(target, self.EData, myHero)
             if Pred.Hitchance >= _G.HITCHANCE_HIGH then
+                NextTick = GetTickCount() + 250
+                ORB:SetMovement(false)
                 Control.CastSpell(HK_E, Pred.CastPosition)
             end
         end
@@ -224,18 +230,22 @@ function Leona:Combo()
         end
 
         if LL.Combo.UseR:Value() and Ready(_R) and myHero.pos:DistanceTo(target.pos) <= 1150 then
-            if myHero.pos:DistanceTo(target.pos) < 850*LL.Drawing.Num:Value()/100 and not Ready(_E) and not Ready(_Q) then
+            if myHero.pos:DistanceTo(target.pos) < 850 and not Ready(_E) and not Ready(_Q) then
                 local Pred = GetGamsteronPrediction(target, self.RData, myHero)
                 if Pred.Hitchance >= _G.HITCHANCE_HIGH then
                     if EnemiesNear(Pred.CastPosition) >= LL.Combo.MinR:Value() then
+                        NextTick = GetTickCount() + 250
+                        ORB:SetMovement(false)
                         Control.CastSpell(HK_R, Pred.CastPosition)
                     end
                 end
             end
-            if myHero.pos:DistanceTo(target.pos) > 800*LL.Drawing.Num:Value()/100 and Ready(_E) and Ready(_Q) then
+            if myHero.pos:DistanceTo(target.pos) > 800 and Ready(_E) and Ready(_Q) then
                 local Pred = GetGamsteronPrediction(target, self.RData, myHero)
                 if Pred.Hitchance >= _G.HITCHANCE_HIGH then
                     if EnemiesNear(Pred.CastPosition) >= LL.Combo.MinR:Value() then
+                        NextTick = GetTickCount() + 250
+                        ORB:SetMovement(false)
                         Control.CastSpell(HK_R, Pred.CastPosition)
                     end
                 end
@@ -282,6 +292,8 @@ function Leona:Harass()
         if LL.Harass.UseE:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 875 then
             local Pred = GetGamsteronPrediction(target, self.EData, myHero)
             if Pred.Hitchance >= _G.HITCHANCE_HIGH then
+                NextTick = GetTickCount() + 250
+                ORB:SetMovement(false)
                 Control.CastSpell(HK_E, Pred.CastPosition)
             end
         end
