@@ -6,18 +6,15 @@ if (myHero.charName ~= "Leona") then
 end
 
 do
-    
-    local Version = 0.07
-    
     local Files = {
         Lua = {
             Path = SCRIPT_PATH,
             Name = "LLeona.lua",
-            Url = "https://raw.githubusercontent.com/Pussykate/GoS/master/PussyAIO.lua"
+            Url = "https://raw.githubusercontent.com/samuelchow1997/gos/master/LLeona.lua"
         },
         Version = {
             Path = SCRIPT_PATH,
-            Name = "PussyAIO.version",
+            Name = "LLeona.version",
             Url = "https://raw.githubusercontent.com/Pussykate/GoS/master/PussyAIO.version"
         }
     }
