@@ -15,7 +15,7 @@ do
         Version = {
             Path = SCRIPT_PATH,
             Name = "LLeona.version",
-            Url = "https://raw.githubusercontent.com/Pussykate/GoS/master/PussyAIO.version"
+            Url = "https://raw.githubusercontent.com/samuelchow1997/gos/master/LLeona.version"
         }
     }
     
@@ -38,14 +38,14 @@ do
         local NewVersion = tonumber(ReadFile(Files.Version.Path, Files.Version.Name))
         if NewVersion > Version then
             DownloadFile(Files.Lua.Url, Files.Lua.Path, Files.Lua.Name)
-            print("New PussyAIO Version Press 2x F6")
+            print("New LLeona Version Press 2x F6")
         else
             print(Files.Version.Name .. ": No Updates Found")
         end
     
     end
     
-    --AutoUpdate()
+    AutoUpdate()
 
 end
 
@@ -156,6 +156,8 @@ function Leona:LoadMenu()
     LL.Drawing:MenuElement({id = "R", name = "Draw [R] Range", value = true})
     LL.Drawing:MenuElement({id = "Num", name = "Draw Prediction Max Range", value = 100, min = 70 , max = 100})
 
+    LL:MenuElement({type = MENU, id = "Version", name = "Version: "..Version , type = SPACE})
+
 end
 
 function Leona:Draw()
@@ -172,7 +174,7 @@ function Leona:Draw()
 end
 
 function Leona:Tick()
-    if myHero.dead or HasBuff(myHero,"recall") or Game.IsChatOpen() or (ExtLibEvade and ExtLibEvade.Evading == true) then
+    if myHero.dead or Game.IsChatOpen() or (ExtLibEvade and ExtLibEvade.Evading == true) then
         return
     end
 
@@ -272,7 +274,6 @@ function Leona:Harass()
             for i = 1, Game.TurretCount() do        
                 local turret = Game.Turret(i)
                 if turret.valid and turret.isEnemy and turret.pos:DistanceTo(target.pos) < 800 then
-                    --print(target.charName)
                     return
                 end
             end
@@ -318,16 +319,13 @@ function Leona:Auto()
             end
         end
     end
-    --if LL.Auto.AutoRR:Value() then
 
     local EnemyHeroes = OB:GetEnemyHeroes(875, false)
     for i = 1, #EnemyHeroes do
         local hero = EnemyHeroes[i]
         if hero.activeSpell.spellWasCast then
-        --print(hero.activeSpell.name)
             if ESpells[hero.activeSpell.name] ~= nil then
                 if LL.Auto.AotoEList[hero.charName]:Value() and hero.activeSpell.target == myHero.handle then
-                    --print("targed")
                     Control.CastSpell(HK_E, hero.pos)
                 end
             end
