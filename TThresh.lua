@@ -1,4 +1,4 @@
-local Version = 0.01
+local Version = 0.02
 local ScriptName = "Thresh"
 
 if (myHero.charName ~= "Thresh") then 
