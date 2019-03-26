@@ -1,4 +1,4 @@
-local Version = 0.04
+local Version = 0.05
 local ScriptName = "Thresh"
 
 if (myHero.charName ~= "Thresh") then 
@@ -119,6 +119,8 @@ function Thresh:LoadMenu()
     TT.E:MenuElement({id = "Auto", name = "Disable autoAttack if E ready", value = true})
     TT.E:MenuElement({id = "AntiE", name = "Anti Dash", type = _G.MENU})
     GamCore:OnEnemyHeroLoad(function(hero) TT.E.AntiE:MenuElement({id = hero.charName, name = hero.charName, value = false}) end)
+    TT.E:MenuElement({id = "Grass", name = "Anti Dash from Grass(beta)", value = false})
+
     TT.E:MenuElement({id = "AutoE", name = "Auto Pull E on ", type = _G.MENU})
     GamCore:OnEnemyHeroLoad(function(hero) TT.E.AutoE:MenuElement({id = hero.charName, name = hero.charName, value = false}) end)
 
@@ -309,10 +311,10 @@ function Thresh:AntiE()
         if TT.E.AntiE[heroName] and TT.E.AntiE[heroName]:Value() then
     
             if target.pathing.isDashing and target.pathing.dashSpeed>600 then
-                if target.activeSpell.spellWasCast and target.activeSpell.startTime<Game.Timer() then       --is activeSpell from Grass
-                    print("start "..target.activeSpell.startTime)
-                    print("timer "..Game.Timer())
-                    pos = target:GetPrediction(target.pathing.dashSpeed, 0.85)
+                if TT.E.Grass:Value() and  target.activeSpell.spellWasCast and target.activeSpell.startTime<Game.Timer() then       --is activeSpell from Grass
+                    --print("start "..target.activeSpell.startTime)
+                    --print("timer "..Game.Timer())
+                    pos = target:GetPrediction(target.pathing.dashSpeed, 0.75)
                     pre = self:GetPosE(pos)
                     Control.CastSpell(HK_E, pre)
                 else
