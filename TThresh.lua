@@ -1,4 +1,4 @@
-local Version = 0.02
+local Version = 0.03
 local ScriptName = "Thresh"
 
 if (myHero.charName ~= "Thresh") then 
@@ -151,7 +151,7 @@ function Thresh:Draw()
     if TT.Drawing.E:Value() and Ready(_E) then
         Draw.Circle(myHero.pos, 450,Draw.Color(80 ,0xFF,0xFF,0xFF))
     end
-
+    --[[
     local target = TS:GetTarget(1000)
     if target == nil then return end
     local flayTowards = self:GetPosE(target.pos)      
@@ -160,6 +160,7 @@ function Thresh:Draw()
     pos = target:GetPrediction(2265, 0.7)
     Draw.Circle(pos, 20,Draw.Color(80 ,0xFF,0xFF,0xFF))
     Draw.Circle(flayTowards, 20,Draw.Color(80 ,0xFF,0xFF,0xFF))
+    --]]
     self:AntiE()
 
 end
