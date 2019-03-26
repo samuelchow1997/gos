@@ -2,7 +2,7 @@ local Version = 0.01
 local ScriptName = "Thresh"
 
 if (myHero.charName ~= "Thresh") then 
-    --return
+    return
 end
 
 if not FileExist(COMMON_PATH .. "GamsteronPrediction.lua") then
