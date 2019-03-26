@@ -1,4 +1,4 @@
-local Version = 0.03
+local Version = 0.04
 local ScriptName = "Thresh"
 
 if (myHero.charName ~= "Thresh") then 
@@ -161,7 +161,7 @@ function Thresh:Draw()
     Draw.Circle(pos, 20,Draw.Color(80 ,0xFF,0xFF,0xFF))
     Draw.Circle(flayTowards, 20,Draw.Color(80 ,0xFF,0xFF,0xFF))
     --]]
-    self:AntiE()
+    --self:AntiE()
 
 end
 
@@ -170,7 +170,7 @@ function Thresh:Tick()
     if myHero.dead or Game.IsChatOpen() or (ExtLibEvade and ExtLibEvade.Evading == true) then
         return
     end
-
+    self:AntiE()
     self:Auto()
     if NextTick > GetTickCount() then return end
 
