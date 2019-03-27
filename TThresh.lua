@@ -1,4 +1,4 @@
-local Version = 0.11
+local Version = 0.12
 local ScriptName = "Thresh"
 
 if (myHero.charName ~= "Thresh") then 
@@ -146,14 +146,15 @@ end
 function Thresh:Draw()
     if myHero.dead then
         return
-
-    
     end
+
+    self:AntiE()
+
     if TT.Drawing.Q:Value() and Ready(_Q) then
         Draw.Circle(myHero.pos, 1100,Draw.Color(255,255, 162, 000))
     end
     if TT.Drawing.E:Value() and Ready(_E) then
-        Draw.Circle(myHero.pos, 450,Draw.Color(80 ,0xFF,0xFF,0xFF))
+        Draw.Circle(myHero.pos, 440,Draw.Color(80 ,0xFF,0xFF,0xFF))
     end
     --[[
     local target = TS:GetTarget(1000)
@@ -165,7 +166,7 @@ function Thresh:Draw()
     Draw.Circle(pos, 20,Draw.Color(80 ,0xFF,0xFF,0xFF))
     Draw.Circle(flayTowards, 20,Draw.Color(80 ,0xFF,0xFF,0xFF))
     --]]
-    --self:AntiE()
+    
 
 end
 
@@ -174,9 +175,11 @@ function Thresh:Tick()
     if myHero.dead or Game.IsChatOpen() or (ExtLibEvade and ExtLibEvade.Evading == true) then
         return
     end
-    self:AntiE()
-    self:Auto()
+
     if NextTick > GetTickCount() then return end
+
+    --self:AntiE()
+    self:Auto()
 
     if Ready(_E) and TT.E.Auto:Value() then
         ORB:SetAttack(false)
@@ -217,7 +220,7 @@ function Thresh:Combo()
             end
         end
 
-        if TT.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 420 then
+        if TT.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 440 then
             pre = self:GetPosE(target.pos)
             Control.CastSpell(HK_E, pre)
         end
@@ -255,7 +258,7 @@ function Thresh:Harass()
             end
         end
 
-        if TT.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 420 then
+        if TT.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 440 then
             pre = self:GetPosE(target.pos)
             Control.CastSpell(HK_E, pre)
         end
@@ -291,13 +294,14 @@ function Thresh:Auto()
 end
 
 function Thresh:AutoE()
-    local EnemyHeroes = OB:GetEnemyHeroes(450, false)
+    local EnemyHeroes = OB:GetEnemyHeroes(440, false)
     if next(EnemyHeroes) == nil then  return  end
     for i = 1, #EnemyHeroes do
         local target = EnemyHeroes[i]
         local heroName = target.charName
-        if TT.E.AutoE[heroName] and TT.E.AutoE[heroName]:Value() then
+        if Ready(_E) and TT.E.AutoE[heroName] and TT.E.AutoE[heroName]:Value() then
             pre = self:GetPosE(target.pos)
+            NextTick = GetTickCount() + 250
             Control.CastSpell(HK_E, pre)
         end
     end
@@ -305,25 +309,22 @@ function Thresh:AutoE()
 end
 
 function Thresh:AntiE()
-    local EnemyHeroes = OB:GetEnemyHeroes(620, false)
+    local EnemyHeroes = OB:GetEnemyHeroes(475, false)
     if next(EnemyHeroes) == nil then  return  end
         for i = 1, #EnemyHeroes do
         local target = EnemyHeroes[i]
         local heroName = target.charName
-        if TT.E.AntiE[heroName] and TT.E.AntiE[heroName]:Value() then
+        if Ready(_E) and TT.E.AntiE[heroName] and TT.E.AntiE[heroName]:Value() then
     
             if target.pathing.isDashing and target.pathing.dashSpeed>600 then
-                if  target.activeSpell.spellWasCast and target.activeSpell.startTime<Game.Timer() then       --is activeSpell from Grass
-                    --print("start "..target.activeSpell.startTime)
-                    --print("timer "..Game.Timer())
-                    --pos = target:GetPrediction(target.pathing.dashSpeed, 0.75)
-                    --pre = self:GetPosE(pos)
-                    --Control.CastSpell(HK_E, pre)
-                else
-                    pos = target:GetPrediction(target.pathing.dashSpeed, 0.35)
-                    pre = self:GetPosE(pos)
-                    Control.CastSpell(HK_E, pre)
-                end
+
+                local delay = 0.25 + ((475 - target.pos:DistanceTo())/1100)
+                --print(delay)
+                local pos = target:GetPrediction(target.pathing.dashSpeed, delay)
+                local pre = self:GetPosE(pos)
+                NextTick = GetTickCount() + 250
+                Control.CastSpell(HK_E, pre)
+
             end
         end
     end
