@@ -1,4 +1,4 @@
-local Version = 0.07
+local Version = 0.08
 local ScriptName = "Thresh"
 
 if (myHero.charName ~= "Thresh") then 
@@ -87,7 +87,7 @@ class "Thresh"
 function Thresh:__init()
     ORB, TS, OB, DMG, SPELLS = _G.SDK.Orbwalker, _G.SDK.TargetSelector, _G.SDK.ObjectManager, _G.SDK.Damage, _G.SDK.Spells
     self.LastReset = 0
-    self.QData = {Type = _G.SPELLTYPE_LINE, Delay = 0.5, Radius = 70, Range = 1000, Speed = 1900, Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL, , _G.COLLISION_ENEMYHERO}}
+    self.QData = {Type = _G.SPELLTYPE_LINE, Delay = 0.5, Radius = 70, Range = 1000, Speed = 1900, Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL,  _G.COLLISION_ENEMYHERO}}
     --Q range 1100 cant hit
     self.EData = {Type = _G.SPELLTYPE_LINE, Delay = 0.25, Radius = 150, Range = 450, Speed = 1100, Collision = false}
     self:LoadMenu()
