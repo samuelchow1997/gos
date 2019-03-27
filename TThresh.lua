@@ -1,4 +1,4 @@
-local Version = 0.08
+local Version = 0.09
 local ScriptName = "Thresh"
 
 if (myHero.charName ~= "Thresh") then 
@@ -215,7 +215,7 @@ function Thresh:Combo()
             end
         end
 
-        if TT.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 450 then
+        if TT.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 420 then
             pre = self:GetPosE(target.pos)
             Control.CastSpell(HK_E, pre)
         end
@@ -253,7 +253,7 @@ function Thresh:Harass()
             end
         end
 
-        if TT.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 450 then
+        if TT.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 420 then
             pre = self:GetPosE(target.pos)
             Control.CastSpell(HK_E, pre)
         end
