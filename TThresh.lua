@@ -1,4 +1,4 @@
-local Version = 0.10
+local Version = 0.11
 local ScriptName = "Thresh"
 
 if (myHero.charName ~= "Thresh") then 
@@ -138,6 +138,8 @@ function Thresh:LoadMenu()
     TT:MenuElement({type = MENU, id = "Drawing", name = "Drawing"})
     TT.Drawing:MenuElement({id = "Q", name = "Draw [Q] Range", value = true})
     TT.Drawing:MenuElement({id = "E", name = "Draw [E] Range", value = true})
+
+    TT:MenuElement({name ="Version " , drop = {Version}})
 
 end
 
@@ -289,7 +291,7 @@ function Thresh:Auto()
 end
 
 function Thresh:AutoE()
-    local EnemyHeroes = OB:GetEnemyHeroes(470, false)
+    local EnemyHeroes = OB:GetEnemyHeroes(450, false)
     if next(EnemyHeroes) == nil then  return  end
     for i = 1, #EnemyHeroes do
         local target = EnemyHeroes[i]
