@@ -1,4 +1,4 @@
-local Version = 0.09
+local Version = 0.10
 local ScriptName = "Thresh"
 
 if (myHero.charName ~= "Thresh") then 
@@ -222,7 +222,7 @@ function Thresh:Combo()
 
     end
 
-    local nearby = #OB:GetEnemyHeroes(450, false)
+    local nearby = #OB:GetEnemyHeroes(420, false)
 
     if Ready(_R) and TT.R.Combo:Value() and nearby >= TT.R.Count:Value() then
         Control.CastSpell(HK_R, pre)
@@ -262,7 +262,7 @@ function Thresh:Harass()
 end
 
 function Thresh:Auto()
-    local nearby = #OB:GetEnemyHeroes(450, false)
+    local nearby = #OB:GetEnemyHeroes(420, false)
     if Ready(_R) and nearby >= TT.R.Auto:Value() then
         Control.CastSpell(HK_R)
     end
