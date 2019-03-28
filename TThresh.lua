@@ -1,4 +1,4 @@
-local Version = 0.12
+local Version = 0.13
 local ScriptName = "Thresh"
 
 if (myHero.charName ~= "Thresh") then 
@@ -151,10 +151,10 @@ function Thresh:Draw()
     self:AntiE()
 
     if TT.Drawing.Q:Value() and Ready(_Q) then
-        Draw.Circle(myHero.pos, 1100,Draw.Color(255,255, 162, 000))
+        Draw.Circle(myHero.pos, 1000,Draw.Color(255,255, 162, 000))
     end
     if TT.Drawing.E:Value() and Ready(_E) then
-        Draw.Circle(myHero.pos, 440,Draw.Color(80 ,0xFF,0xFF,0xFF))
+        Draw.Circle(myHero.pos, 465,Draw.Color(80 ,0xFF,0xFF,0xFF))
     end
     --[[
     local target = TS:GetTarget(1000)
@@ -175,11 +175,12 @@ function Thresh:Tick()
     if myHero.dead or Game.IsChatOpen() or (ExtLibEvade and ExtLibEvade.Evading == true) then
         return
     end
+    
+    self:Auto()
 
     if NextTick > GetTickCount() then return end
 
     --self:AntiE()
-    self:Auto()
 
     if Ready(_E) and TT.E.Auto:Value() then
         ORB:SetAttack(false)
@@ -220,7 +221,7 @@ function Thresh:Combo()
             end
         end
 
-        if TT.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 440 then
+        if TT.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 450 then
             pre = self:GetPosE(target.pos)
             Control.CastSpell(HK_E, pre)
         end
@@ -258,7 +259,7 @@ function Thresh:Harass()
             end
         end
 
-        if TT.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 440 then
+        if TT.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 450 then
             pre = self:GetPosE(target.pos)
             Control.CastSpell(HK_E, pre)
         end
@@ -274,27 +275,31 @@ function Thresh:Auto()
 
 
     local IGdamage = 50 + 20 * myHero.levelData.lvl
-    local target = TS:GetTarget(600)
-    if target == nil then return end
-    if TT.Auto.AutoIG:Value() then
-        if myHero:GetSpellData(SUMMONER_1).name == "SummonerDot" and myHero:GetSpellData(SUMMONER_1).currentCd == 0 then
-            if IGdamage >= target.health then
-                Control.CastSpell(HK_SUMMONER_1, target.pos)
-            end
-        end
-        
+    local EnemyHeroes = OB:GetEnemyHeroes(600,false)
+    if next(EnemyHeroes) == nil then return end
+    for i = 1, #EnemyHeroes do
+        local target = EnemyHeroes[i]
 
-        
+        if TT.Auto.AutoIG:Value() then
+            if myHero:GetSpellData(SUMMONER_1).name == "SummonerDot" and myHero:GetSpellData(SUMMONER_1).currentCd == 0 then
+                if IGdamage >= target.health then
+                    Control.CastSpell(HK_SUMMONER_1, target.pos)
+                end
+            end
+            
+
+            
             if myHero:GetSpellData(SUMMONER_2).name == "SummonerDot" and myHero:GetSpellData(SUMMONER_2).currentCd == 0 then
                 if IGdamage >= target.health then
                     Control.CastSpell(HK_SUMMONER_2, target.pos)
                 end
             end
+        end
     end
 end
 
 function Thresh:AutoE()
-    local EnemyHeroes = OB:GetEnemyHeroes(440, false)
+    local EnemyHeroes = OB:GetEnemyHeroes(465, false)
     if next(EnemyHeroes) == nil then  return  end
     for i = 1, #EnemyHeroes do
         local target = EnemyHeroes[i]
@@ -316,13 +321,14 @@ function Thresh:AntiE()
         local heroName = target.charName
         if Ready(_E) and TT.E.AntiE[heroName] and TT.E.AntiE[heroName]:Value() then
     
-            if target.pathing.isDashing and target.pathing.dashSpeed>600 then
+            if target.pathing.isDashing and target.pathing.dashSpeed>870 then
 
                 local delay = 0.25 + ((475 - target.pos:DistanceTo())/1100)
                 --print(delay)
                 local pos = target:GetPrediction(target.pathing.dashSpeed, delay)
                 local pre = self:GetPosE(pos)
                 NextTick = GetTickCount() + 250
+                print(target.pathing.dashSpeed)
                 Control.CastSpell(HK_E, pre)
 
             end
@@ -331,7 +337,7 @@ function Thresh:AntiE()
 
 end
 
-function Thresh:GetPosE(pos, mode)
+function Thresh:GetPosE(pos, mode) --RMAN
 	local push = mode == "Push" and true or false
 	--	
 	return myHero.pos:Extended(pos, self.EData.Range * (push and 1 or -1))
