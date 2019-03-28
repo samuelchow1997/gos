@@ -328,7 +328,7 @@ function Thresh:AntiE()
                 local pos = target:GetPrediction(target.pathing.dashSpeed, delay)
                 local pre = self:GetPosE(pos)
                 NextTick = GetTickCount() + 250
-                print(target.pathing.dashSpeed)
+                --print(target.pathing.dashSpeed)
                 Control.CastSpell(HK_E, pre)
 
             end
