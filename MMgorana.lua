@@ -1,4 +1,4 @@
-local version = 0.01
+local version = 0.02
 
 if (myHero.charName ~= "Morgana") then 
     return
@@ -33,8 +33,8 @@ local shellSpells = {
     ["WarwickRChannel"] = {charName = "Warwick", slot = "R"},  -- need test
     ["XinZhaoQThrust3"] = {charName = "XinZhao", slot = "Q3"},
     ["VolibearQAttack"] = {charName = "Volibear", slot = "Q"},
-    ["ViR"] = {charName = "Vi", slot = "R"}
-
+    ["ViR"] = {charName = "Vi", slot = "R"},
+    ["LeonaShieldOfDaybreakAttack"] = {charName = "Leona", slot = "Q"}
 }
 function OnLoad()
     MM = MenuElement({type = MENU, id = "MM", name = "Morgana E"})
