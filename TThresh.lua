@@ -231,7 +231,7 @@ function Thresh:Combo()
     local nearby = #OB:GetEnemyHeroes(420, false)
 
     if Ready(_R) and TT.R.Combo:Value() and nearby >= TT.R.Count:Value() then
-        Control.CastSpell(HK_R, pre)
+        Control.CastSpell(HK_R)
     end
 
 end
