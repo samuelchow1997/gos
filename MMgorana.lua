@@ -1,4 +1,4 @@
-local version = 0.02
+local version = 0.03
 
 if (myHero.charName ~= "Morgana") then 
     return
@@ -9,8 +9,8 @@ GamCore = _G.GamsteronCore
 
 local shellSpells = {
     ["SowTheWind"] = {charName = "Janna", slot = "W"},
-    ["Terrify"] = {charName = "Fiddlesticks", slot = "Q"},
-    ["FiddlesticksDarkWind"] = {charName = "Fiddlesticks", slot = "E"},
+    ["Terrify"] = {charName = "FiddleSticks", slot = "Q"},
+    ["FiddlesticksDarkWind"] = {charName = "FiddleSticks", slot = "E"},
     ["LuluWTwo"] = {charName = "Lulu", slot = "W"},
     ["NautilusRavageStrikeAttack"]= {charName = "Nautilus", slot = "Passive"} ,
     ["NautilusGrandLine"]= {charName = "Nautilus", slot = "R"},
@@ -34,7 +34,11 @@ local shellSpells = {
     ["XinZhaoQThrust3"] = {charName = "XinZhao", slot = "Q3"},
     ["VolibearQAttack"] = {charName = "Volibear", slot = "Q"},
     ["ViR"] = {charName = "Vi", slot = "R"},
-    ["LeonaShieldOfDaybreakAttack"] = {charName = "Leona", slot = "Q"}
+    ["LeonaShieldOfDaybreakAttack"] = {charName = "Leona", slot = "Q"},
+    ["GoldCardPreAttack"]= {charName = "TwistedFate", slot = "GoldW"},
+    ["RenektonSuperExecute"]= {charName = "Renekton", slot = "SuperW"},
+    ["RenektonExecute"]= {charName = "Renekton", slot = "W"}
+
 }
 function OnLoad()
     MM = MenuElement({type = MENU, id = "MM", name = "Morgana E"})
@@ -63,6 +67,7 @@ function OnDraw()
             local AllyHeroes = OB:GetAllyHeroes(800)
             for i = 1, #AllyHeroes do
                 local ally = AllyHeroes[i]
+                --print(hero.charName)
                 if hero.activeSpell.target == ally.handle and MM.ally[ally.charName]:Value() and MM.spell[hero.activeSpell.name]:Value() then
                     Control.CastSpell(HK_E, ally)
                 end
@@ -74,7 +79,10 @@ function OnDraw()
             local AllyHeroes = OB:GetAllyHeroes(800)
             for i = 1, #AllyHeroes do
                 local ally = AllyHeroes[i]
+                print("dash"..hero.charName)
+                print(vct:DistanceTo(ally.pos))
                 if vct:DistanceTo(ally.pos) < 172 then
+                    print("Use E on"..ally.charName)
                     Control.CastSpell(HK_E, ally)
                 end
             end
