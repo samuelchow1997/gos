@@ -1,3 +1,5 @@
+require 'MapPositionGOS'
+
 if (myHero.charName ~= "Nautilus") then 
     return
 end
@@ -16,6 +18,8 @@ local  TS, OB, DMG, SPELLS
 local myHero = myHero
 local LocalGameTimer = Game.Timer
 GamCore = _G.GamsteronCore
+
+local lineQ
 
 local function IsValid(unit)
     if (unit 
@@ -39,7 +43,7 @@ class "Nautilus"
 function Nautilus:__init()
     ORB, TS, OB, DMG, SPELLS = _G.SDK.Orbwalker, _G.SDK.TargetSelector, _G.SDK.ObjectManager, _G.SDK.Damage, _G.SDK.Spells
     self.LastReset = 0
-    self.QData = {Type = _G.SPELLTYPE_LINE, Delay = 0.25, Radius = 90, Range = 1100, Speed = 2000, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL}}
+    self.QData = {Type = _G.SPELLTYPE_LINE, Delay = 0.25, Radius = 90, Range = 1100, Speed = 2000, Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL}}
     self:LoadMenu()
     Callback.Add("Tick", function() self:Tick() end)
     Callback.Add("Draw", function() self:Draw() end)
@@ -77,7 +81,6 @@ function Nautilus:LoadMenu()
     LL:MenuElement({type = MENU, id = "Drawing", name = "Drawing"})
     LL.Drawing:MenuElement({id = "Q", name = "Draw [Q] Range", value = true})
 
-    LL:MenuElement({type = MENU, id = "Version", name = "Version: "..Version , type = SPACE})
 
 end
 
@@ -85,6 +88,11 @@ function Nautilus:Draw()
     if myHero.dead then
         return
     end
+--[[
+    if lineQ ~= nil then
+        lineQ:__draw(1)
+    end
+--]]
 
     if LL.Drawing.Q:Value() and Ready(_Q) then
         Draw.Circle(myHero.pos, 1100,Draw.Color(80 ,0xFF,0xFF,0xFF))
@@ -126,10 +134,14 @@ function Nautilus:Combo()
 
 
     if IsValid(target) then
-
         if LL.Combo.UseQ:Value() and Ready(_Q) and myHero.pos:DistanceTo(target.pos) <= 1100 then
+
             local Pred = GetGamsteronPrediction(target, self.QData, myHero)
             if Pred.Hitchance >= _G.HITCHANCE_HIGH then
+                lineQ = LineSegment(Pred.CastPosition, Pred.CastPosition:Extended(myHero.pos, myHero.pos:DistanceTo(target.pos)))
+                if MapPosition:intersectsWall(lineQ) then
+                    return
+                end
                 NextTick = GetTickCount() + 250
                 ORB:SetMovement(false)
                 Control.CastSpell(HK_Q, Pred.CastPosition)
@@ -170,6 +182,10 @@ function Nautilus:Harass()
         if LL.Harass.UseQ:Value() and Ready(_Q) and myHero.pos:DistanceTo(target.pos) <= 1100 then
             local Pred = GetGamsteronPrediction(target, self.QData, myHero)
             if Pred.Hitchance >= _G.HITCHANCE_HIGH then
+                lineQ = LineSegment(Pred.CastPosition, Pred.CastPosition:Extended(myHero.pos, myHero.pos:DistanceTo(target.pos)))
+                if MapPosition:intersectsWall(lineQ) then
+                    return
+                end
                 NextTick = GetTickCount() + 250
                 ORB:SetMovement(false)
                 Control.CastSpell(HK_Q, Pred.CastPosition)
