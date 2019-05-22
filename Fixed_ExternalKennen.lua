@@ -135,10 +135,11 @@ end
 --
 local target=nil
 function OnTick()
-	target=_G.SDK.TargetSelector:GetTarget(900)
+	target=_G.SDK.TargetSelector:GetTarget(1000)
 	if _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO] and target then
 		local protobelt=GetItemSlot(items.Protobelt01)
-		if target.distance<=750 then
+		print("dis "..target.distance)
+		if target.distance<=900 then
 			local glp800=GetItemSlot(items.GLP800)
 			if KennenMenu.Combo.R:Value() and Game.CanUseSpell(_R)==READY and GetNumberOfTableElements(EnemiesNearMe())>=KennenMenu.Combo.RS:Value() then
 				Control.CastSpell(HK_R)
