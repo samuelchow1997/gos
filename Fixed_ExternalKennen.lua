@@ -3,10 +3,12 @@ require "DamageLib"
 require('GamsteronPrediction')
 
 -- SpellDatas
-local Q = {Type = _G.SPELLTYPE_LINE,  delay = 0.25,range = 1050,speed = 1650 , Radius = 50 ,Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL}, icon = "https://vignette2.wikia.nocookie.net/leagueoflegends/images/f/f5/Thundering_Shuriken.png"}
+local Q = {delay = 0.2,range = 1050,speed = 1650,icon = "https://vignette2.wikia.nocookie.net/leagueoflegends/images/f/f5/Thundering_Shuriken.png"}
 local W = {range = 750,icon = "https://vignette2.wikia.nocookie.net/leagueoflegends/images/d/db/Electrical_Surge.png"}
 local E = {icon = "https://vignette1.wikia.nocookie.net/leagueoflegends/images/7/76/Lightning_Rush.png"}
 local R = {range = 550,icon = "https://vignette2.wikia.nocookie.net/leagueoflegends/images/e/e9/Slicing_Maelstrom.png"}
+local Qdata = {Type = _G.SPELLTYPE_LINE, Delay = 0.25, Radius = 50, Range = 1050, Speed = 1650, Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL}}
+
 -- Menu
 local KennenMenu = MenuElement({type = MENU, id = "KennenMenu", name = "Kennen", leftIcon = "https://3.bp.blogspot.com/-O697Ogz4jsM/VrpDrM-SXfI/AAAAAAAA304/u0HS_vxuYaU/s1600/profileIcon1107.png"})
 --Combo
@@ -97,7 +99,7 @@ local function CastQ(who)
 	if who then
 		if not who.dead and not who.isImmune then
 			if Game.CanUseSpell(_Q)==READY and who.distance<=Q.range then
-				local Pred = GetGamsteronPrediction(who, Q, myHero)
+				local Pred = GetGamsteronPrediction(who, Qdata , myHero)
 				if Pred.Hitchance >= _G.HITCHANCE_HIGH then
 					Control.CastSpell(HK_Q, Pred.CastPosition)
 				end
