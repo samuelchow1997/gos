@@ -138,7 +138,6 @@ function OnTick()
 	target=_G.SDK.TargetSelector:GetTarget(1050)
 	if _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO] and target then
 		local protobelt=GetItemSlot(items.Protobelt01)
-		print("dis "..target.distance)
 		if target.distance<=980 then
 			local glp800=GetItemSlot(items.GLP800)
 			if KennenMenu.Combo.R:Value() and Game.CanUseSpell(_R)==READY and GetNumberOfTableElements(EnemiesNearMe())>=KennenMenu.Combo.RS:Value() then
