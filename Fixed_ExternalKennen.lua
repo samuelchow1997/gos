@@ -10,31 +10,31 @@ local R = {range = 550,icon = "https://vignette2.wikia.nocookie.net/leagueoflege
 local Qdata = {Type = _G.SPELLTYPE_LINE, Delay = 0.25, Radius = 50, Range = 1050, Speed = 1650, Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL}}
 
 -- Menu
-local KennenMenu = MenuElement({type = MENU, id = "KennenMenu", name = "Kennen", leftIcon = "https://3.bp.blogspot.com/-O697Ogz4jsM/VrpDrM-SXfI/AAAAAAAA304/u0HS_vxuYaU/s1600/profileIcon1107.png"})
+local KennenMenu = MenuElement({type = MENU, id = "KennenMenu", name = "Kennen"})
 --Combo
-KennenMenu:MenuElement({type = MENU, id = "Combo", name = "Combo", leftIcon = "http://news.cdn.leagueoflegends.com/public/images/articles/2015/march_2015/upn/orbitallaser.jpg"})
-KennenMenu.Combo:MenuElement({type = PARAM, id = "Q", name = "Use Q", value = true, leftIcon = Q.icon})
-KennenMenu.Combo:MenuElement({type = PARAM, id = "W", name = "Use W", value = true, leftIcon = W.icon})
-KennenMenu.Combo:MenuElement({type = PARAM, id = "WS", name = "Only Stun with W", value = true, leftIcon = W.icon})
-KennenMenu.Combo:MenuElement({type = PARAM, id = "R", name = "Use R", value = true, leftIcon = R.icon})
+KennenMenu:MenuElement({type = MENU, id = "Combo", name = "Combo"})
+KennenMenu.Combo:MenuElement({type = PARAM, id = "Q", name = "Use Q", value = true})
+KennenMenu.Combo:MenuElement({type = PARAM, id = "W", name = "Use W", value = true})
+KennenMenu.Combo:MenuElement({type = PARAM, id = "WS", name = "Only Stun with W", value = true})
+KennenMenu.Combo:MenuElement({type = PARAM, id = "R", name = "Use R", value = true})
 KennenMenu.Combo:MenuElement({type = PARAM, id = "RS", name = "Min. Enemies To Use Ult", value = 2,min=1,max=5,leftIcon = R.icon})
 --Harass
-KennenMenu:MenuElement({type = MENU, id = "Harass", name = "Harass Menu", leftIcon = "http://i.imgur.com/RmI1avo.png"})
-KennenMenu.Harass:MenuElement({type = PARAM, id = "Q", name = "Use Q", value = true, leftIcon = Q.icon})
-KennenMenu.Harass:MenuElement({type = PARAM, id = "W", name = "Use W", value = true, leftIcon = W.icon})
-KennenMenu.Harass:MenuElement({type = PARAM, id = "WS", name = "Only Stun with W", value = true, leftIcon = W.icon})
+KennenMenu:MenuElement({type = MENU, id = "Harass", name = "Harass Menu"})
+KennenMenu.Harass:MenuElement({type = PARAM, id = "Q", name = "Use Q", value = true})
+KennenMenu.Harass:MenuElement({type = PARAM, id = "W", name = "Use W", value = true})
+KennenMenu.Harass:MenuElement({type = PARAM, id = "WS", name = "Only Stun with W", value = true})
 --AutoStun
-KennenMenu:MenuElement({type = MENU, id = "AutoStun", name = "AutoStun", leftIcon = "https://vignette2.wikia.nocookie.net/leagueoflegends/images/9/9d/Stun_icon.png"})
-KennenMenu.AutoStun:MenuElement({type = PARAM, id = "Q", name = "Use Q", value = false, leftIcon = Q.icon})
-KennenMenu.AutoStun:MenuElement({type = PARAM, id = "W", name = "Use W", value = false, leftIcon = W.icon})
+KennenMenu:MenuElement({type = MENU, id = "AutoStun", name = "AutoStun"})
+KennenMenu.AutoStun:MenuElement({type = PARAM, id = "Q", name = "Use Q", value = false})
+KennenMenu.AutoStun:MenuElement({type = PARAM, id = "W", name = "Use W", value = false})
 --KillSecure
-KennenMenu:MenuElement({type = MENU, id = "KillSecure", name = " KillSecure", leftIcon = "http://www.freeiconspng.com/uploads/troll-face-png-2.png"})
-KennenMenu.KillSecure:MenuElement({type = PARAM, id = "Q", name = "Use Q", value = true, leftIcon = Q.icon})
-KennenMenu.KillSecure:MenuElement({type = PARAM, id = "W", name = "Use W", value = true, leftIcon = W.icon})
+KennenMenu:MenuElement({type = MENU, id = "KillSecure", name = " KillSecure"})
+KennenMenu.KillSecure:MenuElement({type = PARAM, id = "Q", name = "Use Q", value = true})
+KennenMenu.KillSecure:MenuElement({type = PARAM, id = "W", name = "Use W", value = true})
 --Items
-KennenMenu:MenuElement({type = MENU, id = "Item", name = " Item Usage", leftIcon = "http://www.freeiconspng.com/uploads/troll-face-png-2.png"})
-KennenMenu.Item:MenuElement({type = PARAM, id = "GLP800", name = "Use Hextech GLP-800 in Combo", value = true, leftIcon = "http://ddragon.leagueoflegends.com/cdn/7.7.1/img/item/3030.png"})
-KennenMenu.Item:MenuElement({type = PARAM, id = "Protobelt01", name = "Gapclose With Protobelt-01", value = true, leftIcon = "https://vignette2.wikia.nocookie.net/leagueoflegends/images/8/8d/Hextech_Protobelt-01_item.png"})
+KennenMenu:MenuElement({type = MENU, id = "Item", name = " Item Usage"})
+KennenMenu.Item:MenuElement({type = PARAM, id = "GLP800", name = "Use Hextech GLP-800 in Combo", value = true})
+KennenMenu.Item:MenuElement({type = PARAM, id = "Protobelt01", name = "Gapclose With Protobelt-01", value = true})
 --
 local items={Zhonya=3157,GLP800=3030,Protobelt01=3152}
 local ItemSlots={ITEM_1,ITEM_2,ITEM_3,ITEM_4,ITEM_5,ITEM_6,ITEM_7}
