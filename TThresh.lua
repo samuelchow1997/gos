@@ -1,4 +1,6 @@
-local Version = 0.13
+local Version = 0.14
+local Patch = 9.11
+
 local ScriptName = "Thresh"
 
 if (myHero.charName ~= "Thresh") then 
@@ -87,7 +89,7 @@ class "Thresh"
 function Thresh:__init()
     ORB, TS, OB, DMG, SPELLS = _G.SDK.Orbwalker, _G.SDK.TargetSelector, _G.SDK.ObjectManager, _G.SDK.Damage, _G.SDK.Spells
     self.LastReset = 0
-    self.QData = {Type = _G.SPELLTYPE_LINE, Delay = 0.5, Radius = 70, Range = 1000, Speed = 1900, Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL,  _G.COLLISION_ENEMYHERO}}
+    self.QData = {Type = _G.SPELLTYPE_LINE, Delay = 0.5, Radius = 70, Range = 1000, Speed = 1900, Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL}}
     --Q range 1100 cant hit
     self.EData = {Type = _G.SPELLTYPE_LINE, Delay = 0.25, Radius = 150, Range = 450, Speed = 1100, Collision = false}
     self:LoadMenu()
@@ -139,6 +141,7 @@ function Thresh:LoadMenu()
     TT.Drawing:MenuElement({id = "Q", name = "Draw [Q] Range", value = true})
     TT.Drawing:MenuElement({id = "E", name = "Draw [E] Range", value = true})
 
+    TT:MenuElement({name ="Patch : " , drop = {Patch}})
     TT:MenuElement({name ="Version " , drop = {Version}})
 
 end
@@ -180,7 +183,7 @@ function Thresh:Tick()
 
     if NextTick > GetTickCount() then return end
 
-    --self:AntiE()
+    self:AntiE()
 
     if Ready(_E) and TT.E.Auto:Value() then
         ORB:SetAttack(false)
@@ -323,7 +326,7 @@ function Thresh:AntiE()
     
             if target.pathing.isDashing and target.pathing.dashSpeed>870 then
 
-                local delay = 0.25 + ((475 - target.pos:DistanceTo())/1100)
+                local delay = 0.25 + (475 - target.pos:DistanceTo())/1100
                 --print(delay)
                 local pos = target:GetPrediction(target.pathing.dashSpeed, delay)
                 local pre = self:GetPosE(pos)
