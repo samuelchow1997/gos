@@ -1,4 +1,4 @@
-local Version = 0.01
+local Version = 0.02
 local ScriptName = "Vi"
 
 if (myHero.charName ~= "Vi") then 
@@ -55,6 +55,8 @@ function Vi:__init()
 
     Callback.Add("Tick", function() self:Tick() end)
     Callback.Add("Draw", function() self:Draw() end)
+    Callback.Add('WndMsg', function(...) self:WndMsg(...) end)
+
     ORB:OnPostAttackTick(function(...) self:OnPostAttackTick(...) end)
 
 end
@@ -165,18 +167,19 @@ function Vi:OnPostAttackTick()
             Control.CastSpell(HK_E) 
             ORB:__OnAutoAttackReset()
             nextETime = LocalGameTimer() + 0.2
-            print("E")
         end
     elseif target.team == GamCore.TEAM_JUNGLE then
         if BB.WaveClear.UseE:Value() and Ready(_E) then
             Control.CastSpell(HK_E)
             ORB:__OnAutoAttackReset()
             nextETime = LocalGameTimer() + 0.2
-            print("E")
         end
     end
 end
 
+function Vi:GetAttackTarget()
+
+end
 
 
 function Vi:Qmanager()
@@ -188,6 +191,15 @@ function Vi:Qmanager()
         end
     end
     self.Qchannel = false
+end
+
+function Vi:WndMsg(msg, wParam)
+    if msg == 256 and wParam == 81 then
+        if Ready(_Q) then
+            self.Qchannel = true
+            self.Qtimer = LocalGameTimer()
+        end
+    end
 end
 
 function OnLoad()
