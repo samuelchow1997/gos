@@ -177,9 +177,6 @@ function Vi:OnPostAttackTick()
     end
 end
 
-function Vi:GetAttackTarget()
-
-end
 
 
 function Vi:Qmanager()
