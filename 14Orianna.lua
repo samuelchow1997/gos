@@ -19,6 +19,7 @@ GamCore = _G.GamsteronCore
 local ballPos = {pos = myHero.pos, ground = false, selfball = false, canW = true}
 local lastRTick = 0
 local lastQTick = 0
+local lastEWTick = 0
 
 
 local function IsValid(unit)
@@ -89,6 +90,9 @@ function Orianna:LoadMenu()
     TY.combo:MenuElement({id = "UseR", name = "R", value = true})
     TY.combo:MenuElement({id = "Rmax", name = "Only Use R if taret HP < X % ", value = 50, min = 0, max = 100, step = 1})
     TY.combo:MenuElement({id = "Rmin", name = "Only Use R if taret HP > X % ", value = 10, min = 0, max = 100, step = 1})
+    TY.combo:MenuElement({name = "Use R on:", id = "useon", type = _G.MENU})
+    GamCore:OnEnemyHeroLoad(function(hero) TY.AutoQ.useon:MenuElement({id = hero.charName, name = hero.charName, value = true}) end)
+
 
     TY:MenuElement({type = MENU, id = "harass", name = "Harass"})
     TY.harass:MenuElement({id = "UseQ", name = "Q", value = true})
@@ -109,7 +113,7 @@ function Orianna:LoadMenu()
     TY.Drawing:MenuElement({id = "Q", name = "Draw [Q] Range", value = true})
 
     TY.Drawing:MenuElement({type = MENU, id = "QColor", name = "Q Range Color"})
-    TY.Drawing.QColor:MenuElement({id = "T", name = "Transparency ", value = 100, min = 0, max = 100, step = 1})
+    TY.Drawing.QColor:MenuElement({id = "T", name = "Transparency ", value = 255, min = 0, max = 255, step = 1})
     TY.Drawing.QColor:MenuElement({id = "R", name = "Red ", value = 150, min = 0, max = 255, step = 1})
     TY.Drawing.QColor:MenuElement({id = "G", name = "Grean ", value = 150, min = 0, max = 255, step = 1})
     TY.Drawing.QColor:MenuElement({id = "B", name = "Blue ", value = 150, min = 0, max = 255, step = 1})
@@ -117,7 +121,7 @@ function Orianna:LoadMenu()
     TY.Drawing:MenuElement({id = "E", name = "Draw [E] Range", value = true})
 
     TY.Drawing:MenuElement({type = MENU, id = "EColor", name = "E Range Color"})
-    TY.Drawing.EColor:MenuElement({id = "T", name = "Transparency ", value = 100, min = 0, max = 100, step = 1})
+    TY.Drawing.EColor:MenuElement({id = "T", name = "Transparency ", value = 255, min = 0, max = 255, step = 1})
     TY.Drawing.EColor:MenuElement({id = "R", name = "Red ", value = 150, min = 0, max = 255, step = 1})
     TY.Drawing.EColor:MenuElement({id = "G", name = "Grean ", value = 150, min = 0, max = 255, step = 1})
     TY.Drawing.EColor:MenuElement({id = "B", name = "Blue ", value = 150, min = 0, max = 255, step = 1})
@@ -126,7 +130,7 @@ function Orianna:LoadMenu()
     TY.Drawing:MenuElement({id = "ball", name = "Draw Ball Pos", value = true})
 
     TY.Drawing:MenuElement({type = MENU, id = "BColor", name = "Ball Color"})
-    TY.Drawing.BColor:MenuElement({id = "T", name = "Transparency ", value = 100, min = 0, max = 100, step = 1})
+    TY.Drawing.BColor:MenuElement({id = "T", name = "Transparency ", value = 255, min = 0, max = 255, step = 1})
     TY.Drawing.BColor:MenuElement({id = "R", name = "Red ", value = 150, min = 0, max = 255, step = 1})
     TY.Drawing.BColor:MenuElement({id = "G", name = "Grean ", value = 150, min = 0, max = 255, step = 1})
     TY.Drawing.BColor:MenuElement({id = "B", name = "Blue ", value = 150, min = 0, max = 255, step = 1})
@@ -135,14 +139,14 @@ function Orianna:LoadMenu()
     TY.Drawing:MenuElement({id = "W", name = "Draw [W] Range", value = true})
 
     TY.Drawing:MenuElement({type = MENU, id = "WColor", name = "W Range Color"})
-    TY.Drawing.WColor:MenuElement({id = "T", name = "Transparency ", value = 100, min = 0, max = 100, step = 1})
+    TY.Drawing.WColor:MenuElement({id = "T", name = "Transparency ", value = 255, min = 0, max = 255, step = 1})
     TY.Drawing.WColor:MenuElement({id = "R", name = "Red ", value = 150, min = 0, max = 255, step = 1})
     TY.Drawing.WColor:MenuElement({id = "G", name = "Grean ", value = 150, min = 0, max = 255, step = 1})
     TY.Drawing.WColor:MenuElement({id = "B", name = "Blue ", value = 150, min = 0, max = 255, step = 1})
 
     TY.Drawing:MenuElement({id = "R", name = "Draw [R] Range", value = true})
     TY.Drawing:MenuElement({type = MENU, id = "RColor", name = "R Range Color"})
-    TY.Drawing.RColor:MenuElement({id = "T", name = "Transparency ", value = 100, min = 0, max = 100, step = 1})
+    TY.Drawing.RColor:MenuElement({id = "T", name = "Transparency ", value = 255, min = 0, max = 255, step = 1})
     TY.Drawing.RColor:MenuElement({id = "R", name = "Red ", value = 150, min = 0, max = 255, step = 1})
     TY.Drawing.RColor:MenuElement({id = "G", name = "Grean ", value = 150, min = 0, max = 255, step = 1})
     TY.Drawing.RColor:MenuElement({id = "B", name = "Blue ", value = 150, min = 0, max = 255, step = 1})
@@ -152,15 +156,18 @@ end
 
 function Orianna:Tick()
 
-    if lastQTick < GetTickCount()+50 then
+    if lastQTick + 50 < GetTickCount() then
         ORB:SetAttack(true)
         ORB:SetMovement(true)
     end
 
-    ballPos.canW = true
     self:LoadBallPos()
 
-    if lastRTick > GetTickCount()+750 then return end
+    if lastQTick+ 150 > GetTickCount() then return end
+    if lastRTick + 800 > GetTickCount() then return end
+    if lastEWTick +300 > GetTickCount() then return end
+
+    ballPos.canW = true
 
     if ORB.Modes[0] then --combo
         self:Combo()
@@ -208,7 +215,9 @@ function Orianna:Combo()
             self:CastQ(target)
         end
 
-        if TY.combo.UseW:Value() and Ready(_W) and ballPos.pos:DistanceTo(target.pos) <= self.WData.Radius then
+        if TY.combo.UseW:Value() and Ready(_W) and ballPos.pos:DistanceTo(target.pos) <= self.WData.Radius and ballPos.canW then
+            --print("cast W")
+            lastEWTick = GetTickCount()
             Control.CastSpell(HK_W)
         end
         --GetCollision = function(source (Object), castPos (Vector), predPos (Vector), speed (integer), delay (float (seconds)), radius (integer), collisionTypes (table), skipID (integer))
@@ -217,14 +226,20 @@ function Orianna:Combo()
             local isWall , collisionObjects , collisionCount   = GetCollision(ballPos.pos,  myHero.pos , myHero.pos, self.EData.speed, 0, 40, {_G.COLLISION_ENEMYHERO})
 
             if collisionCount >= 1 then
+                lastEWTick = GetTickCount()
                 Control.CastSpell(HK_E, myHero)
+                --print("cast E")
+
             end
         end
 
         if TY.combo.UseR:Value() and Ready(_R) and self:GetHP(target) <= TY.combo.Rmax:Value() and self:GetHP(target) >= TY.combo.Rmin:Value() then
             local delayPos = target:GetPrediction(target.ms,0.75)
             if delayPos:DistanceTo(ballPos.pos) <= 370 then
+                lastRTick = GetTickCount()
                 Control.CastSpell(HK_R)
+                --print("cast R")
+
             end
         end
 
@@ -280,7 +295,10 @@ function Orianna:AutoW()
         end
 
         if count >= TY.AutoW.Count:Value() then
+            lastEWTick = GetTickCount()
             Control.CastSpell(HK_W)
+            --print("Auo W")
+
         end
     end
 end
@@ -300,6 +318,8 @@ function Orianna:AutoR()
         if count >= TY.AutoR.Count:Value() then
             lastRTick = GetTickCount()
             Control.CastSpell(HK_R)
+            --print("Auto R")
+
         end
 
 
@@ -307,17 +327,19 @@ function Orianna:AutoR()
 end
 
 function Orianna:CastQ(target)
-    
+    if lastQTick + 100 > GetTickCount() then return end
     if Ready(_Q) and myHero.pos:DistanceTo(target.pos) <= self.QData.Range then
         local Pred = GetGamsteronPrediction(target, self.QData, ballPos)
         if Pred.Hitchance >= _G.HITCHANCE_HIGH 
-        and  myHero.pos:DistanceTo(Pred.CastPosition)+30 <= 825
+        and  myHero.pos:DistanceTo(Pred.CastPosition)<= 825
         then
-            local extenPos = Pred.CastPosition:Extended(ballPos.pos, -30)
             lastQTick = GetTickCount()
             ORB:SetAttack(false)
             ORB:SetMovement(false)
-            Control.CastSpell(HK_Q, extenPos)
+            Control.CastSpell(HK_Q, Pred.CastPosition)
+            ballPos.canW = false
+            --print("cast Q")
+
         end
     end
 end
@@ -326,7 +348,8 @@ function Orianna:LoadBallPos()
     for i = 1, GameMissileCount() do
         local missile = GameMissile(i)
         if missile.missileData.name == "OrianaIzuna" then
-            local vetor  = Vector(missile.missileData.endPos.x, missile.missileData.endPos.y, missile.missileData.endPos.z)
+            --local vetor  = Vector(missile.missileData.endPos.x, missile.missileData.endPos.y, missile.missileData.endPos.z)
+            local vetor = missile.pos
             ballPos.pos = vetor
             ballPos.ground = true
             ballPos.selfball = false
