@@ -44,7 +44,7 @@ function Khazix:__init()
 
     self.QData = {Range = 325}
     self.WData = {Type = _G.SPELLTYPE_LINE, Delay = 0.25, Radius = 70, Range = 1000, Speed = 1650, Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL}}
-    self.EData = {Type = _G.SPELLTYPE_CIRCLE, Delay = 0, Radius = 120, Range = 700, Speed = 1000, Collision = false}
+    self.EData = {Type = _G.SPELLTYPE_CIRCLE, Delay = 0, Radius = 270, Range = 700, Speed = 1000, Collision = false}
 
     self:LoadMenu()
     Callback.Add("Tick", function() self:Tick() end)
@@ -89,11 +89,7 @@ function Khazix:Draw()
         return
     end
     
-    --[[
-    if lastCursor ~= nil then
-        Draw.Circle(lastCursor, 100,Draw.Color(80 ,0xFF,0xFF,0xFF))
-    end
-    --]]
+    Draw.Circle(Game.mousePos(), 300,Draw.Color(80 ,0xFF,0xFF,0xFF))
 
     if LL.Drawing.Q:Value() and Ready(_Q) then
         Draw.Circle(myHero.pos, self.QData.Range,Draw.Color(80 ,0xFF,0xFF,0xFF))
@@ -165,7 +161,7 @@ function Khazix:Combo()
     if LL.Combo.UseE:Value()  then
         local target = self:GetHeroTarget(self.EData.Range)
         if target ~= nil then
-            self:CastE()
+            self:CastE(target)
         end
     end
 
@@ -235,14 +231,14 @@ end
 
 function Khazix:CastE(target)
     if not Ready(_E) then return end
-
     local Pred = GetGamsteronPrediction(target, self.EData, myHero)
+    print(Pred.Hitchance)
     if Pred.Hitchance >= _G.HITCHANCE_HIGH then
         NextTick = GetTickCount() + 450
         ORB:SetMovement(false)
         ORB:SetAttack(false)
         Control.CastSpell(HK_E, Pred.CastPosition)
-        --print("cast E")
+        print("cast E")
 
     end
 
