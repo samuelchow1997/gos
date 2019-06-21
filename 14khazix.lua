@@ -89,7 +89,7 @@ function Khazix:Draw()
         return
     end
     
-    Draw.Circle(Game.mousePos(), 300,Draw.Color(80 ,0xFF,0xFF,0xFF))
+    --Draw.Circle(Game.mousePos(), 300,Draw.Color(80 ,0xFF,0xFF,0xFF))
 
     if LL.Drawing.Q:Value() and Ready(_Q) then
         Draw.Circle(myHero.pos, self.QData.Range,Draw.Color(80 ,0xFF,0xFF,0xFF))
