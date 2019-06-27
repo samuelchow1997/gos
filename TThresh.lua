@@ -1,4 +1,4 @@
-local Version = 0.14
+local Version = 0.15
 local Patch = 9.13
 
 local ScriptName = "Thresh"
