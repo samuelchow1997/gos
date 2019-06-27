@@ -205,7 +205,7 @@ function Khazix:CastW(target)
     if not Ready(_W) then return end
 
     local Pred = GetGamsteronPrediction(target, self.WData, myHero)
-    if Pred.Hitchance >= _G.HITCHANCE_HIGH then
+    if Pred.Hitchance >= _G.HITCHANCE_NORMAL then
         NextTick = GetTickCount() + 350
         ORB:SetMovement(false)
         ORB:SetAttack(false)
