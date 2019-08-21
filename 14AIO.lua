@@ -1,25 +1,32 @@
 local version = 0.01
 
+
+local champ = myHero.charName
 local AiOPath = "14AiO\\"
 local lua = "14" .. champ
 
+local SupportChampionVersion = {
+	["Lulu"] 	= 		0.01
 
-local Files = {
-    Lua = {
-        Path = SCRIPT_PATH,
-        Name = "14AIO.lua",
-        Url = "https://raw.githubusercontent.com/samuelchow1997/gos/master/14AIO.lua"
-    },
-    Version = {
-        Path = SCRIPT_PATH,
-        Name = "14AIO.version",
-        Url = "https://raw.githubusercontent.com/samuelchow1997/gos/master/14AIO.version"
-    }
 }
 
 
-local function AutoUpdate()
+
+local function AutoUpdate(pth, nm, vs)
         
+    local Files = {
+        Lua = {
+            Path = pth,
+            Name = nm..".lua",
+            Url = "https://raw.githubusercontent.com/samuelchow1997/gos/master/"..nm..".lua"
+        },
+        Version = {
+            Path = pth,
+            Name = nm..".version",
+            Url = "https://raw.githubusercontent.com/samuelchow1997/gos/master/"..nm..".version"
+        }
+    }
+
     local function DownloadFile(url, path, fileName)
         DownloadFileAsync(url, path .. fileName, function() end)
         while not FileExist(path .. fileName) do end
@@ -34,20 +41,27 @@ local function AutoUpdate()
     
     DownloadFile(Files.Version.Url, Files.Version.Path, Files.Version.Name)
     local NewVersion = tonumber(ReadFile(Files.Version.Path, Files.Version.Name))
-    if NewVersion > version then
+    if NewVersion > vs then
         DownloadFile(Files.Lua.Url, Files.Lua.Path, Files.Lua.Name)
-        print("New 14AIO Version Press 2x F6")
+        print("New"..nm.. "Version Press 2x F6")
     else
         print(Files.Version.Name .. ": No Updates Found")
     end
 
 end
 
-AutoUpdate()
+AutoUpdate(SCRIPT_PATH, "14AIO", version)
 
 
 local file = io.open(COMMON_PATH .. AiOPath .. lua .. ".lua", "r")
 
 if file then
-    print("file")
+    if SupportChampionVersion[champ] then
+        AutoUpdate(COMMON_PATH .. AiOPath, lua , SupportChampionVersion[champ])
+    end
+
+    Callback.Add("Load", function() require(AiOPath .. lua) end)
+
+else
+    AutoUpdate(COMMON_PATH .. AiOPath, lua , 0)
 end
