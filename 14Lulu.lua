@@ -170,11 +170,16 @@ function Lulu:LoadMenu()
 
         self.tyMenu.combo:MenuElement({id = "Q", name = "Use Q Combo", value = true})
 
+        self.tyMenu.combo:MenuElement({id = "hitc", name = "Hit Chance {2=NORMAL 3=HIGH}", value = 2, min = 2, max = 3, step = 1})
+
+
 
     self.tyMenu:MenuElement({type = MENU, id = "harass", name = "Harass"})
 
         self.tyMenu.harass:MenuElement({id = "Q", name = "Use Q Harass", value = true})
-       
+
+        self.tyMenu.harass:MenuElement({id = "hitc", name = "Hit Chance {2=NORMAL 3=HIGH}", value = 3, min = 2, max = 3, step = 1})
+
 
     self.tyMenu:MenuElement({type = MENU, id = "autoW", name = "Auto W Setting"})
 
@@ -249,7 +254,7 @@ function Lulu:Combo()
     local target = TargetSelector:GetTarget(self.Q.Range, 1)
     if target and IsValid(target) then
         if self.tyMenu.combo.Q:Value() then
-            self:CastQ(target)
+            self:CastQ(target, self.tyMenu.combo.hitc:Value())
         end
     end
 end
@@ -258,15 +263,15 @@ function Lulu:Harass()
     local target = TargetSelector:GetTarget(self.Q.Range, 1)
     if target and IsValid(target) then
         if self.tyMenu.harass.Q:Value() then
-            self:CastQ(target)
+            self:CastQ(target, self.tyMenu.harass.hitc:Value())
         end
     end
 end
 
-function Lulu:CastQ(target)
+function Lulu:CastQ(target, hitchance)
     if Ready(_Q) and lastQ +350 < GetTickCount() and orbwalker:CanMove() then
         local Pred = GetGamsteronPrediction(target, self.Q, myHero)
-        if Pred.Hitchance >= _G.HITCHANCE_HIGH then
+        if Pred.Hitchance >= hitchance then
             Control.CastSpell(HK_Q, Pred.CastPosition)
             lastQ = GetTickCount()
         end

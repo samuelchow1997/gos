@@ -1,16 +1,22 @@
-local version = 0.02
+local version = 0.04
 
 
 local champ = myHero.charName
 local AiOPath = "14AiO\\"
 local lua = "14" .. champ
 
-local SupportChampionVersion = {
-	["Lulu"] 	= 		0.01
+local SupportChampion = {
+	["Lulu"] 	= 		true
 
 }
 
 
+local function ReadFile(path, fileName)
+    local file = io.open(path .. fileName, "r")
+    local result = file:read()
+    file:close()
+    return result
+end
 
 local function AutoUpdate(pth, nm, vs)
         
@@ -32,12 +38,7 @@ local function AutoUpdate(pth, nm, vs)
         while not FileExist(path .. fileName) do end
     end
     
-    local function ReadFile(path, fileName)
-        local file = io.open(path .. fileName, "r")
-        local result = file:read()
-        file:close()
-        return result
-    end
+
     
     DownloadFile(Files.Version.Url, Files.Version.Path, Files.Version.Name)
     local NewVersion = tonumber(ReadFile(Files.Version.Path, Files.Version.Name))
@@ -52,12 +53,19 @@ end
 
 AutoUpdate(SCRIPT_PATH, "14AIO", version)
 
-if SupportChampionVersion[champ] then
+if SupportChampion[champ] then
 
     local file = io.open(COMMON_PATH .. AiOPath .. lua .. ".lua", "r")
+    local champ_vs = io.open(COMMON_PATH .. AiOPath .. lua .. ".version", "r")
 
-    if file then
-        AutoUpdate(COMMON_PATH .. AiOPath, lua , SupportChampionVersion[champ])
+    if file and champ_vs then
+        
+        file:close()
+        champ_vs:close()
+
+        local championVs = tonumber(ReadFile(COMMON_PATH .. AiOPath, lua .. ".version"))
+
+        AutoUpdate(COMMON_PATH .. AiOPath, lua , championVs)
 
         Callback.Add("Load", function() require(AiOPath .. lua) end)
 
