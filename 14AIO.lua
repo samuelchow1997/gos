@@ -1,4 +1,4 @@
-local version = 0.01
+local version = 0.02
 
 
 local champ = myHero.charName
@@ -52,16 +52,19 @@ end
 
 AutoUpdate(SCRIPT_PATH, "14AIO", version)
 
+if SupportChampionVersion[champ] then
 
-local file = io.open(COMMON_PATH .. AiOPath .. lua .. ".lua", "r")
+    local file = io.open(COMMON_PATH .. AiOPath .. lua .. ".lua", "r")
 
-if file then
-    if SupportChampionVersion[champ] then
+    if file then
         AutoUpdate(COMMON_PATH .. AiOPath, lua , SupportChampionVersion[champ])
+
+        Callback.Add("Load", function() require(AiOPath .. lua) end)
+
+    else
+        AutoUpdate(COMMON_PATH .. AiOPath, lua , 0)
     end
 
-    Callback.Add("Load", function() require(AiOPath .. lua) end)
-
 else
-    AutoUpdate(COMMON_PATH .. AiOPath, lua , 0)
+    print(champ.. " Not supported in 14AIO")
 end
