@@ -211,9 +211,9 @@ end
 
 function Sivir:OnPostAttack()
     if orbwalker.Modes[0] then
-        if self.tyMenu.combo.WAA:Value() and Ready(_W) then
+        if self.tyMenu.combo.WAA:Value() and Ready(_W) and lastW + 250 < GetTickCount() then
             Control.CastSpell(HK_W)
-            print("post W")
+            lastW = GetTickCount()
         end
     end
 end
@@ -238,11 +238,13 @@ function Sivir:Tick()
         self:Harass()
     end
 
+    self:BlockSpell()
+    self:AutoQ()
 end
 
 function Sivir:Combo() 
     local target = TargetSelector:GetTarget(self.Q.Range, 0)
-    if target and IsValid(target) then
+    if target and IsValid(target) and myHero.pos:DistanceTo(target.pos) < self.tyMenu.combo.maxRange:Value() then
         if self.tyMenu.combo.Q:Value() then
             self:CastQ(target)
         end
@@ -251,14 +253,14 @@ end
 
 function Sivir:Harass() 
     local target = TargetSelector:GetTarget(self.Q.Range, 0)
-    if target and IsValid(target) then
+    if target and IsValid(target) and myHero.pos:DistanceTo(target.pos) < self.tyMenu.harass.maxRange:Value() then
         if self.tyMenu.harass.Q:Value() then
             self:CastQ(target)
         end
     end
 end
 
-function Lulu:CastQ(target)
+function Sivir:CastQ(target)
     if Ready(_Q) and lastQ +350 < GetTickCount() and orbwalker:CanMove() then
         local Pred = GetGamsteronPrediction(target, self.Q, myHero)
         if Pred.Hitchance >= 3 then
@@ -268,118 +270,48 @@ function Lulu:CastQ(target)
     end
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function OnLoad()
-    MM = MenuElement({type = MENU, id = "MM", name = "Sivir E"})
-
-    MM:MenuElement({type = MENU, id = "spell", name = "Spells"})
-    GamCore:OnEnemyHeroLoad(function(hero) 
-        for k, v in pairs(shellSpells) do
-            if v.charName == hero.charName then
-                MM.spell:MenuElement({id = k, name = v.charName.." | "..v.slot , value = true})
+function Sivir:AutoQ()
+    if self.tyMenu.auto.Q:Value() and Ready(_Q) and lastQ +350 < GetTickCount() and orbwalker:CanMove() then
+        for k , hero in pairs(Enemys) do 
+            local Pred = GetGamsteronPrediction(hero, self.Q, myHero)
+            if Pred.Hitchance == 4 then
+                Control.CastSpell(HK_Q, Pred.CastPosition)
+                lastQ = GetTickCount()
             end
-        end
-    end)
-
-    MM:MenuElement({type = MENU, id = "dash", name = "track dash on"})
-    GamCore:OnEnemyHeroLoad(function(hero) MM.dash:MenuElement({id = hero.charName, name = hero.charName, value = false}) end)
-
-end
-
-local NextTick = GetTickCount()
-
-function OnDraw()
-
-    if NextTick > GetTickCount() then return end
-
-    local EnemyHeroes = OB:GetEnemyHeroes(2800, false)
-    for i = 1, #EnemyHeroes do
-        local hero = EnemyHeroes[i]
-        if hero.activeSpell.valid and shellSpells[hero.activeSpell.name] ~= nil then
-            if hero.activeSpell.target == myHero.handle and MM.spell[hero.activeSpell.name]:Value() then
-                Control.CastSpell(HK_E)
-                NextTick = GetTickCount() +250
-                return
-            end
-            
-        end
-
-        if hero.pathing.isDashing and MM.dash[hero.charName]:Value() then
-            local vct = Vector(hero.pathing.endPos.x,hero.pathing.endPos.y,hero.pathing.endPos.z)
-            print("dash"..hero.charName)
-            print(vct:DistanceTo(myHero.pos))
-            if vct:DistanceTo(myHero.pos) < 172 then
-                print("Use E on"..ally.charName)
-                Control.CastSpell(HK_E)
-                NextTick = GetTickCount() +250
-                return
-            end
-            
         end
     end
+end
 
-    --[[
-    for i = 1, GameMissileCount() do
-        local missile = GameMissile(i)
+function Sivir:BlockSpell()
+    if Ready(_E) and lastE +1050 < GetTickCount() then
+        for k , hero in pairs(Enemys) do 
+            if hero.activeSpell.valid and shellSpells[hero.activeSpell.name] ~= nil then
+                if hero.activeSpell.target == myHero.handle and self.tyMenu.eSetting.blockSpell[hero.activeSpell.name]:Value() then
+                    local dt = hero.pos:DistanceTo(myHero.pos)
+                    local spell = shellSpells[hero.activeSpell.name]
+                    local hitTime = spell.delay + dt/spell.speed
+        
+                    DelayAction(function()
+                            Control.CastSpell(HK_E)
+                            print("castE "..GetTickCount())
+                    end, (hitTime-self.tyMenu.eSetting.eDelay:Value()))
+                    lastE = GetTickCount()
+                    return
+                end
+            end
 
-        if(missile.missileData.owner > 0) and missile.pos:DistanceTo()<1500 and missile.missileData.name:find("ThreshQMissile") then
-            --local vctstart = Vector(missile.missileData.startPos.x,missile.missileData.startPos.y,missile.missileData.startPos.z)
-            --local vctend = Vector(missile.missileData.endPos.x,missile.missileData.endPos.y,missile.missileData.endPos.z)
-            print("Distance"..missile.pos:DistanceTo())
-            Draw.Circle(missile.pos,missile.missileData.width);
-            --Draw.Circle(vctstart,missile.missileData.width);
-            --Draw.Circle(vctend,missile.missileData.width);
-            --print("bd"..myHero.boundingRadius)
-
-            print("Name: "..missile.missileData.name)
-            print(missile.missileData.width)
-            local dis = 0.25 * missile.missileData.speed
-            print ("dis"..dis)
-            local AllyHeroes = OB:GetAllyHeroes(800)
-            for i = 1, #AllyHeroes do
-                local ally = AllyHeroes[i]
-                if missile.pos:DistanceTo(ally.pos)+ally.boundingRadius < missile.missileData.width + dis  and MM.ally[ally.charName]:Value() then
-
-                    print("Use E on"..ally.charName)
-                    Control.CastSpell(HK_E, ally)
-                    print("dd"..missile.pos:DistanceTo(ally.pos)+ally.boundingRadius)
-                    print("range"..missile.missileData.width +dis)
-                    NextTick = GetTickCount()  + 1000
+            if hero.pathing.isDashing and self.tyMenu.eSetting.dash[hero.charName]:Value() then
+                local vct = Vector(hero.pathing.endPos.x,hero.pathing.endPos.y,hero.pathing.endPos.z)
+                if vct:DistanceTo(myHero.pos) < 172 then
+                    Control.CastSpell(HK_E)
+                    lastE = GetTickCount()
+                    return
                 end
             end
         end
     end
---]]
-
 end
+
+
+
+Sivir()
