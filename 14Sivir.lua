@@ -252,8 +252,12 @@ function Sivir:Combo()
 end
 
 function Sivir:Harass() 
+    local manaPer = myHero.mana/myHero.maxMana
     local target = TargetSelector:GetTarget(self.Q.Range, 0)
-    if target and IsValid(target) and myHero.pos:DistanceTo(target.pos) < self.tyMenu.harass.maxRange:Value() then
+    if target and IsValid(target) 
+        and myHero.pos:DistanceTo(target.pos) < self.tyMenu.harass.maxRange:Value()
+        and  self.tyMenu.harass.mana:Value() < manaPer
+    then
         if self.tyMenu.harass.Q:Value() then
             self:CastQ(target)
         end
