@@ -1,4 +1,4 @@
-local version = 0.04
+local version = 0.05
 
 
 local champ = myHero.charName
@@ -6,7 +6,9 @@ local AiOPath = "14AiO\\"
 local lua = "14" .. champ
 
 local SupportChampion = {
-	["Lulu"] 	= 		true
+    ["Lulu"] 	= 		true,
+    ["Sivir"] 	= 		true
+
 
 }
 
