@@ -293,7 +293,6 @@ function Sivir:BlockSpell()
         
                     DelayAction(function()
                             Control.CastSpell(HK_E)
-                            print("castE "..GetTickCount())
                     end, (hitTime-self.tyMenu.eSetting.eDelay:Value()))
                     lastE = GetTickCount()
                     return
