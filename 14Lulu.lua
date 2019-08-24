@@ -339,13 +339,13 @@ end
 function Lulu:Interrupt()
     if not Ready(_W) or lastW +250 > GetTickCount()  then return end
     for enemyk , enemy in pairs(Enemys) do 
-        if enemy.activeSpell.valid  and self.tyMenu.autoW.interrupt[enemy.activeSpell.name] and self.tyMenu.autoW.interrupt[enemy.activeSpell.name]:Value() then
+        if enemy.activeSpell.valid and myHero.pos:DistanceTo(enemy.pos) < self.W.Range and self.tyMenu.autoW.interrupt[enemy.activeSpell.name] and self.tyMenu.autoW.interrupt[enemy.activeSpell.name]:Value() then
             Control.CastSpell(HK_W, enemy.pos)
             lastW = GetTickCount()
             return
         end
 
-        if self.tyMenu.autoW.interrupt[enemy.charName] and self.tyMenu.autoW.interrupt[enemy.charName]:Value() and self.ChannelingBuffs[enemy.charName] then
+        if self.tyMenu.autoW.interrupt[enemy.charName] and self.tyMenu.autoW.interrupt[enemy.charName]:Value() and self.ChannelingBuffs[enemy.charName] and myHero.pos:DistanceTo(enemy.pos) < self.W.Range then
             Control.CastSpell(HK_W, enemy.pos)
             lastW = GetTickCount()
             return
@@ -400,7 +400,9 @@ function Lulu:AutoR()
         end  
     end
 
+end
 
+function Lulu:GetEnemyAround(ally)
 
 end
 
