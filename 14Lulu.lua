@@ -104,7 +104,11 @@ function Lulu:__init()
 
         --dash winup > .25
         ["GalioE"] = {charName = "Galio", slot = "E"},
-        ["UrgotE"] = {charName = "Urgot", slot = "E"}
+        ["UrgotE"] = {charName = "Urgot", slot = "E"},
+
+        --speed spell
+        ["PowerBall"] = {charName = "Rammus", slot = "Q"}
+
     }
 
     self.channelingChamp = {
@@ -112,7 +116,10 @@ function Lulu:__init()
         ["TwistedFate"] = {slot = "R"},
         ["Urgot"] = {slot = "W"},
         ["Neeko"] = {slot = "R"},
-        ["Swain"] = {slot = "R"}
+        ["Swain"] = {slot = "R"},
+        ["Hecarim"] = {slot = "E"},
+        ["MasterYi"] = {slot = "R"},
+        ["Jax"] = {slot = "E"}
 
     }
 
@@ -132,6 +139,15 @@ function Lulu:__init()
         end,
         ["Swain"] = function(unit)
             return self:HasBuff(unit, "SwainR")
+        end,
+        ["Hecarim"] = function(unit)
+            return self:HasBuff(unit, "hecarimrampspeed")
+        end,
+        ["MasterYi"] = function(unit)
+            return self:HasBuff(unit, "Highlander")
+        end,
+        ["Jax"] = function(unit)
+            return self:HasBuff(unit, "JaxCounterStrike")
         end
     }
 
@@ -224,11 +240,33 @@ function Lulu:LoadMenu()
         OnAllyHeroLoad(function(hero)
             self.tyMenu.autoR.Ron:MenuElement({id = hero.charName, name = hero.charName, value = true})
         end)
+
+
+    self.tyMenu:MenuElement({type = MENU, id = "draw", name = "Draw Setting"})
+        self.tyMenu.draw:MenuElement({id = "Q", name = "Draw Q", value = true})
+        self.tyMenu.draw:MenuElement({id = "W", name = "Draw W", value = true})
+        self.tyMenu.draw:MenuElement({id = "E", name = "Draw E", value = true})
+        self.tyMenu.draw:MenuElement({id = "R", name = "Draw R", value = true})
+
 end
 
 
 
 function Lulu:Draw()
+    if myHero.dead then return end
+
+    if self.tyMenu.draw.Q:Value() and Ready(_Q) then
+        Draw.Circle(myHero.pos, self.Q.Range,Draw.Color(255,255, 162, 000))
+    end
+    if self.tyMenu.draw.W:Value() and Ready(_W) then
+        Draw.Circle(myHero.pos, self.W.Range,Draw.Color(255,255, 162, 000))
+    end
+    if self.tyMenu.draw.E:Value() and Ready(_E) then
+        Draw.Circle(myHero.pos, self.E.Range,Draw.Color(255,255, 162, 000))
+    end
+    if self.tyMenu.draw.R:Value() and Ready(_R) then
+        Draw.Circle(myHero.pos, self.R.Range,Draw.Color(255,255, 162, 000))
+    end
 
 end
 
@@ -292,6 +330,8 @@ function Lulu:AntiDash()
                     return
                 end
             end
+
+
         end
     end
 end
@@ -339,21 +379,21 @@ function Lulu:AutoR()
             if IsValid(ally) and myHero.pos:DistanceTo(ally.pos) < self.R.Range then
                 if ally.health / ally.maxHealth * 100 < self.tyMenu.autoR.Rhp:Value() then
                     Control.CastSpell(HK_R, ally.pos)
-                    print("cast R "..ally.charName)
+                    print("low Health cast R "..ally.charName)
                     lastR = GetTickCount()
                     return
                 end
-            end
-
-            local count = 0
-            for enemyk , enemy in pairs(Enemys) do 
-                if IsValid(enemy) and enemy.pos:DistanceTo(ally.pos) < 400 then
-                    count = count + 1 
-                    if count >= self.tyMenu.autoR.Rcount:Value() then
-                        Control.CastSpell(HK_R, ally.pos)
-                        print("cast R "..ally.charName)
-                        lastR = GetTickCount()
-                        return
+            
+                local count = 0
+                for enemyk , enemy in pairs(Enemys) do 
+                    if IsValid(enemy) and enemy.pos:DistanceTo(ally.pos) < 400 then
+                        count = count + 1 
+                        if count >= self.tyMenu.autoR.Rcount:Value() then
+                            Control.CastSpell(HK_R, ally.pos)
+                            print("Knock Up cast R "..ally.charName)
+                            lastR = GetTickCount()
+                            return
+                        end
                     end
                 end
             end
