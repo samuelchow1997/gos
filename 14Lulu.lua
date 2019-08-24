@@ -359,7 +359,7 @@ function Lulu:AutoE()
     for allyK, ally in pairs(Allys) do
         if self.tyMenu.autoE.Eon[ally.charName] and self.tyMenu.autoE.Eon[ally.charName]:Value() then
             if ally.health / ally.maxHealth * 100 < self.tyMenu.autoE.Ehp:Value() then
-                if IsValid(ally) and myHero.pos:DistanceTo(ally.pos) < self.E.Range then
+                if IsValid(ally) and myHero.pos:DistanceTo(ally.pos) < self.E.Range and self:GetEnemyAround(ally) > 0 then
                     Control.CastSpell(HK_E, ally.pos)
                     print("cast E "..ally.charName)
                     lastE = GetTickCount()
@@ -377,7 +377,7 @@ function Lulu:AutoR()
     for allyK, ally in pairs(Allys) do
         if self.tyMenu.autoR.Ron[ally.charName] and self.tyMenu.autoR.Ron[ally.charName]:Value() then
             if IsValid(ally) and myHero.pos:DistanceTo(ally.pos) < self.R.Range then
-                if ally.health / ally.maxHealth * 100 < self.tyMenu.autoR.Rhp:Value() then
+                if ally.health / ally.maxHealth * 100 < self.tyMenu.autoR.Rhp:Value() and self:GetEnemyAround(ally) > 0 then
                     Control.CastSpell(HK_R, ally.pos)
                     print("low Health cast R "..ally.charName)
                     lastR = GetTickCount()
@@ -403,7 +403,13 @@ function Lulu:AutoR()
 end
 
 function Lulu:GetEnemyAround(ally)
-
+    local counter = 0
+    for enemyk , enemy in pairs(Enemys) do 
+        if IsValid(enemy) and enemy.pos:DistanceTo(ally.pos) < 650 then
+            counter = counter + 1
+        end
+    end
+    return counter
 end
 
 function Lulu:IG()
