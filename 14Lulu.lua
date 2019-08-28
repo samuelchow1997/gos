@@ -13,11 +13,21 @@ local lastE = 0
 local lastR = 0
 local lastIG = 0
 local lastMove = 0
+local lastItem = 0
+
+local HK_ITEM_1 = HK_ITEM_1
+local HK_ITEM_2 = HK_ITEM_2
+local HK_ITEM_3 = HK_ITEM_3
+local HK_ITEM_4 = HK_ITEM_4
+local HK_ITEM_5 = HK_ITEM_5
+local HK_ITEM_6 = HK_ITEM_6
+local HK_ITEM_7 = HK_ITEM_7
 
 local Enemys =   {}
 local Allys  =   {}
 
 require('GamsteronPrediction')
+
 
 local function IsValid(unit)
     if (unit 
@@ -71,6 +81,16 @@ function Lulu:__init()
     self.W = {Range = 650}
     self.E = {Range = 650}
     self.R = {Range = 900}
+
+    self.ItemSlots = {
+        ITEM_1,
+        ITEM_2,
+        ITEM_3,
+        ITEM_4,
+        ITEM_5,
+        ITEM_6,
+        ITEM_7,
+    };
 
     self.channelingSpell = {
         ["Crowstorm"]           = {charName = "FiddleSticks", slot = "R"},
@@ -186,6 +206,8 @@ function Lulu:LoadMenu()
 
         self.tyMenu.combo:MenuElement({id = "Q", name = "Use Q Combo", value = true})
 
+        self.tyMenu.combo:MenuElement({id = "range", name = "Max Cast Q In range", value = 880, min = 1, max = 880, step = 1})
+
         self.tyMenu.combo:MenuElement({id = "hitc", name = "Hit Chance {2=NORMAL 3=HIGH}", value = 2, min = 2, max = 3, step = 1})
 
 
@@ -193,6 +215,8 @@ function Lulu:LoadMenu()
     self.tyMenu:MenuElement({type = MENU, id = "harass", name = "Harass"})
 
         self.tyMenu.harass:MenuElement({id = "Q", name = "Use Q Harass", value = true})
+
+        self.tyMenu.harass:MenuElement({id = "range", name = "Max Cast Q In range", value = 880, min = 1, max = 880, step = 1})
 
         self.tyMenu.harass:MenuElement({id = "hitc", name = "Hit Chance {2=NORMAL 3=HIGH}", value = 3, min = 2, max = 3, step = 1})
 
@@ -216,6 +240,11 @@ function Lulu:LoadMenu()
                     self.tyMenu.autoW.interrupt:MenuElement({id = hero.charName, name = hero.charName.." | "..self.channelingChamp[hero.charName].slot , value = true})
                 end
             end)
+        
+        self.tyMenu.autoW:MenuElement({type = MENU, id = "onEnemy", name = "Auto Cast On Enemy if in Range"})
+            OnEnemyHeroLoad(function(hero)
+                self.tyMenu.autoW.onEnemy:MenuElement({id = hero.charName, name = hero.charName, value = false})
+            end)  
 
 
     self.tyMenu:MenuElement({type = MENU, id = "autoE", name = "Auto E Setting"})
@@ -241,12 +270,36 @@ function Lulu:LoadMenu()
             self.tyMenu.autoR.Ron:MenuElement({id = hero.charName, name = hero.charName, value = true})
         end)
 
+    self.tyMenu:MenuElement({type = MENU, id = "item", name = "Mikael's Crucible Setting"})
+        self.tyMenu.item:MenuElement({id = "combo", name = "Only Use In Combo", value = true})
+        self.tyMenu.item:MenuElement({type = MENU, id = "type", name = "Use On CC Type"})
+            self.tyMenu.item.type:MenuElement({id = 5, name = "STUN", value = true})
+            self.tyMenu.item.type:MenuElement({id = 11, name = "SNARE - Ryze W", value = true})
+            self.tyMenu.item.type:MenuElement({id = 21, name = "Fear - fiddle q", value = true})
+            self.tyMenu.item.type:MenuElement({id = 22, name = "Charm - ahri e", value = true})
+            self.tyMenu.item.type:MenuElement({id = 8, name = "Taunt - rammus e", value = true})
+            self.tyMenu.item.type:MenuElement({id = 31, name = "Disarm - lulu w", value = true})
+
+            self.tyMenu.item.type:MenuElement({id = "slowm", name = "Slow Settings", type = MENU})
+                self.tyMenu.item.type.slowm:MenuElement({id = "slow", name = "Slow", value = true})
+                self.tyMenu.item.type.slowm:MenuElement({id = "speed", name = "Maximum  Move Speed", value = 200, min = 0, max = 250, step = 10})
+                self.tyMenu.item.type.slowm:MenuElement({id = "duration", name = "Minimum duration - in ms", value = 1500, min = 1000, max = 3000, step = 50})
+        
+        self.tyMenu.item:MenuElement({type = MENU, id = "useon", name = "Use On Ally"})
+        OnAllyHeroLoad(function(hero)
+            self.tyMenu.item.useon:MenuElement({id = hero.charName, name = hero.charName, value = true})
+        end)
+
 
     self.tyMenu:MenuElement({type = MENU, id = "draw", name = "Draw Setting"})
         self.tyMenu.draw:MenuElement({id = "Q", name = "Draw Q", value = true})
         self.tyMenu.draw:MenuElement({id = "W", name = "Draw W", value = true})
         self.tyMenu.draw:MenuElement({id = "E", name = "Draw E", value = true})
         self.tyMenu.draw:MenuElement({id = "R", name = "Draw R", value = true})
+
+    self.tyMenu:MenuElement({name = " ", type = SPACE})
+    self.tyMenu:MenuElement({name = "F6 If Ally or Enemy List Not load", type = SPACE})
+
 
 end
 
@@ -282,16 +335,18 @@ function Lulu:Tick()
         self:Harass()
     end
 
+
     self:AntiDash()
     self:Interrupt()
     self:AutoE()
     self:AutoR()
+    self:UseItem()
 end
 
 function Lulu:Combo() 
     local target = TargetSelector:GetTarget(self.Q.Range, 1)
     if target and IsValid(target) then
-        if self.tyMenu.combo.Q:Value() then
+        if self.tyMenu.combo.Q:Value() and myHero.pos:DistanceTo(target.pos) < self.tyMenu.combo.range:Value() then
             self:CastQ(target, self.tyMenu.combo.hitc:Value())
         end
     end
@@ -300,7 +355,7 @@ end
 function Lulu:Harass() 
     local target = TargetSelector:GetTarget(self.Q.Range, 1)
     if target and IsValid(target) then
-        if self.tyMenu.harass.Q:Value() then
+        if self.tyMenu.harass.Q:Value() and myHero.pos:DistanceTo(target.pos) < self.tyMenu.harass.range:Value() then
             self:CastQ(target, self.tyMenu.harass.hitc:Value())
         end
     end
@@ -330,8 +385,6 @@ function Lulu:AntiDash()
                     return
                 end
             end
-
-
         end
     end
 end
@@ -339,16 +392,23 @@ end
 function Lulu:Interrupt()
     if not Ready(_W) or lastW +250 > GetTickCount()  then return end
     for enemyk , enemy in pairs(Enemys) do 
-        if enemy.activeSpell.valid and myHero.pos:DistanceTo(enemy.pos) < self.W.Range and self.tyMenu.autoW.interrupt[enemy.activeSpell.name] and self.tyMenu.autoW.interrupt[enemy.activeSpell.name]:Value() then
-            Control.CastSpell(HK_W, enemy.pos)
-            lastW = GetTickCount()
-            return
-        end
+        if myHero.pos:DistanceTo(enemy.pos) < self.W.Range then
+            if enemy.activeSpell.valid  and self.tyMenu.autoW.interrupt[enemy.activeSpell.name] and self.tyMenu.autoW.interrupt[enemy.activeSpell.name]:Value() then
+                Control.CastSpell(HK_W, enemy.pos)
+                lastW = GetTickCount()
+                return
+            end
 
-        if self.tyMenu.autoW.interrupt[enemy.charName] and self.tyMenu.autoW.interrupt[enemy.charName]:Value() and self.ChannelingBuffs[enemy.charName] and myHero.pos:DistanceTo(enemy.pos) < self.W.Range then
-            Control.CastSpell(HK_W, enemy.pos)
-            lastW = GetTickCount()
-            return
+            if self.tyMenu.autoW.interrupt[enemy.charName] and self.tyMenu.autoW.interrupt[enemy.charName]:Value() and self.ChannelingBuffs[enemy.charName]  then
+                Control.CastSpell(HK_W, enemy.pos)
+                lastW = GetTickCount()
+                return
+            end
+
+            if self.tyMenu.autoW.onEnemy[enemy.charName] and self.tyMenu.autoW.onEnemy[enemy.charName]:Value() then
+                Control.CastSpell(HK_W, enemy.pos)
+                lastW = GetTickCount()
+            end
         end
     end
 end
@@ -400,6 +460,74 @@ function Lulu:AutoR()
         end  
     end
 
+end
+
+function Lulu:UseItem()
+    if self.tyMenu.item.combo:Value() and not orbwalker.Modes[0] then return end
+    if lastItem + 350 > GetTickCount() then return end
+
+    local i, slot = self:GetItemSlot(3222)    --Mikael's Crucible
+
+    if not myHero:GetSpellData(slot).currentCd == 0 then return end
+
+    if i then
+        local HKItem = ({HK_ITEM_1, HK_ITEM_2, HK_ITEM_3, HK_ITEM_4, HK_ITEM_5, HK_ITEM_6, HK_ITEM_7})[i]
+        for K, ally in pairs(Allys) do
+            if IsValid(ally) and self.tyMenu.item.useon[ally.charName] 
+             and self.tyMenu.item.useon[ally.charName]:Value()
+             and myHero.pos:DistanceTo(ally.pos) < 650
+             and self:HasMenuBuff(ally) and self:GetEnemyAround(ally) > 0  then
+                Control.CastSpell(HKItem, ally.pos)
+                print('use item')
+                lastItem = GetTickCount()
+                return
+            end
+        end
+    end
+end
+
+function Lulu:GetItemSlot(id)
+    for i = 1, #self.ItemSlots do
+        local slot = self.ItemSlots[i];
+        local item = myHero:GetItemData(slot);
+        if item and item.itemID > 0 then
+            if item.itemID == id then
+                return i, slot
+            end
+        end
+    end
+
+    return nil
+end
+
+function Lulu:HasMenuBuff(hero)
+    local menuBuffs = {
+        [5]     =   self.tyMenu.item.type[5]:Value(),
+        [11]    =   self.tyMenu.item.type[11]:Value(),
+        [21]    =   self.tyMenu.item.type[21]:Value(),
+        [22]    =   self.tyMenu.item.type[22]:Value(),
+        [8]     =   self.tyMenu.item.type[8]:Value(),
+        [31]    =   self.tyMenu.item.type[31]:Value()
+    }
+
+    for k = 0, hero.buffCount do
+        local buff = hero:GetBuff(k)
+        if buff and buff.count > 0 then
+            local buffType = buff.type
+            local buffDurat = buff.duration
+            if menuBuffs[buffType] then
+                return true
+            end
+
+            if buffType == 10 and self.tyMenu.item.type.slowm.slow:Value() 
+            and buffDurat > self.tyMenu.item.type.slowm.duration:Value()
+            and hero.ms <= self.tyMenu.item.type.slowm.speed:Value() then
+                return true
+            end
+        end
+    end
+
+    return false
 end
 
 function Lulu:GetEnemyAround(ally)
