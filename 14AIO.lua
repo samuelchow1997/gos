@@ -6,8 +6,10 @@ local AiOPath = "14AiO\\"
 local lua = "14" .. champ
 
 local SupportChampion = {
-    ["Lulu"] 	= 		true,
-    ["Sivir"] 	= 		true
+    ["Lulu"] 	    = 		true,
+    ["Sivir"] 	    = 		true,
+    -- ["Brand"] 	    = 		true,
+    ["Nautilus"]    = 	    true
 
 
 }
