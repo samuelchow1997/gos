@@ -1,24 +1,28 @@
-
-if (myHero.charName ~= "Khazix") then 
-    return
-end
-
-
-
-if not FileExist(COMMON_PATH .. "GamsteronPrediction.lua") then
-	print("GsoPred. installed Press 2x F6")
-	DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GOS-External/master/Common/GamsteronPrediction.lua", COMMON_PATH .. "GamsteronPrediction.lua", function() end)
-	while not FileExist(COMMON_PATH .. "GamsteronPrediction.lua") do end
-end
-    
+  
 require('GamsteronPrediction')
+local GameHeroCount     = Game.HeroCount
+local GameHero          = Game.Hero
+local TableInsert       = _G.table.insert
 
-local  TS, OB, DMG, SPELLS
-local myHero = myHero
-local LocalGameTimer = Game.Timer
-GamCore = _G.GamsteronCore
+local orbwalker         = _G.SDK.Orbwalker
+local TargetSelector    = _G.SDK.TargetSelector
 
-local targetList = {}
+local lastQ = 0
+local lastW = 0
+local lastE = 0
+local lastR = 0
+local lastIG = 0
+local lastMove = 0
+
+local Enemys =   {}
+local Allys  =   {}
+
+local function GetDistanceSquared(vec1, vec2)
+    local dx = vec1.x - vec2.x
+    local dy = (vec1.z or vec1.y) - (vec2.z or vec2.y)
+    return dx * dx + dy * dy
+end
+
 
 local function IsValid(unit)
     if (unit 
@@ -27,28 +31,71 @@ local function IsValid(unit)
         and unit.alive 
         and unit.visible 
         and unit.networkID 
-        and unit.health > 0) then
+        and unit.health > 0
+        and not unit.dead
+    ) then
         return true;
     end
     return false;
 end
 
 local function Ready(spell)
-    return myHero:GetSpellData(spell).currentCd == 0 and myHero:GetSpellData(spell).level > 0 and myHero:GetSpellData(spell).mana <= myHero.mana and Game.CanUseSpell(spell) == 0
+    return myHero:GetSpellData(spell).currentCd == 0 
+    and myHero:GetSpellData(spell).level > 0 
+    and myHero:GetSpellData(spell).mana <= myHero.mana 
+    and Game.CanUseSpell(spell) == 0
 end
+
+local function OnAllyHeroLoad(cb)
+    for i = 1, GameHeroCount() do
+        local obj = GameHero(i)
+        if obj.isAlly then
+            cb(obj)
+        end
+    end
+end
+
+local function OnEnemyHeroLoad(cb)
+    for i = 1, GameHeroCount() do
+        local obj = GameHero(i)
+        if obj.isEnemy then
+            cb(obj)
+        end
+    end
+end
+
 
 class "Khazix"
 
 function Khazix:__init()
-    ORB, TS, OB, DMG, SPELLS = _G.SDK.Orbwalker, _G.SDK.TargetSelector, _G.SDK.ObjectManager, _G.SDK.Damage, _G.SDK.Spells
 
-    self.QData = {Range = 325}
-    self.WData = {Type = _G.SPELLTYPE_LINE, Delay = 0.25, Radius = 70, Range = 1000, Speed = 1650, Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL}}
-    self.EData = {Type = _G.SPELLTYPE_CIRCLE, Delay = 0, Radius = 270, Range = 700, Speed = 1000, Collision = false}
+    self.Q = {Range = 325}
+    self.W = {Type = _G.SPELLTYPE_LINE, Delay = 0.25, Radius = 70, Range = 1000, Speed = 1650, Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL}}
+    self.E = {Type = _G.SPELLTYPE_CIRCLE, Delay = 0, Radius = 120, Range = 700, Speed = 1000, Collision = false}
 
     self:LoadMenu()
+
+    OnAllyHeroLoad(function(hero)
+        TableInsert(Allys, hero);
+    end)
+
+    OnEnemyHeroLoad(function(hero)
+        TableInsert(Enemys, hero);
+    end)
+
     Callback.Add("Tick", function() self:Tick() end)
     Callback.Add("Draw", function() self:Draw() end)
+
+    orbwalker:OnPreMovement(
+        function(args)
+            if lastMove + 180 > GetTickCount() then
+                args.Process = false
+            else
+                args.Process = true
+                lastMove = GetTickCount()
+            end
+        end 
+    )
 end
 
 
@@ -57,55 +104,54 @@ end
 
 
 function Khazix:LoadMenu()
-    LL = MenuElement({type = MENU, id = "ll", name = "Khazix"})
+    self.tyMenu = MenuElement({type = MENU, id = "14Khazix", name = "Khazix"})
     
     --combo
     
-    LL:MenuElement({type = MENU, id = "Combo", name = "Combo"})
-    LL.Combo:MenuElement({id = "UseQ", name = "[Q]", value = true})
-    LL.Combo:MenuElement({id = "UseW", name = "[W]", value = true})
-    LL.Combo:MenuElement({id = "UseE", name = "[E]", value = true})
+    self.tyMenu:MenuElement({type = MENU, id = "Combo", name = "Combo"})
+    self.tyMenu.Combo:MenuElement({id = "UseQ", name = "[Q]", value = true})
+    self.tyMenu.Combo:MenuElement({id = "UseW", name = "[W]", value = true})
+    self.tyMenu.Combo:MenuElement({id = "range", name = "Max Cast W In range", value = 1000, min = 1, max = 1000, step = 1})
+    self.tyMenu.Combo:MenuElement({id = "UseE", name = "[E]", value = true})
     
     --jungle
-    LL:MenuElement({type = MENU, id = "Jungle", name = "Jungle"})
-    LL.Jungle:MenuElement({id = "UseQ", name = "[Q]", value = true})
-    LL.Jungle:MenuElement({id = "UseW", name = "[W]", value = true})
+    self.tyMenu:MenuElement({type = MENU, id = "Jungle", name = "Jungle"})
+    self.tyMenu.Jungle:MenuElement({id = "UseQ", name = "[Q]", value = true})
+    self.tyMenu.Jungle:MenuElement({id = "UseW", name = "[W]", value = true})
 
 
 
 
     --Draw
-    LL:MenuElement({type = MENU, id = "Drawing", name = "Drawing"})
-    LL.Drawing:MenuElement({id = "Q", name = "Draw [Q] Range", value = true})
-    LL.Drawing:MenuElement({id = "W", name = "Draw [W] Range", value = true})
-    LL.Drawing:MenuElement({id = "E", name = "Draw [E] Range", value = true})
+    self.tyMenu:MenuElement({type = MENU, id = "Drawing", name = "Drawing"})
+    self.tyMenu.Drawing:MenuElement({id = "Q", name = "Draw [Q] Range", value = true})
+    self.tyMenu.Drawing:MenuElement({id = "W", name = "Draw [W] Range", value = true})
+    self.tyMenu.Drawing:MenuElement({id = "E", name = "Draw [E] Range", value = true})
 
 
 end
-local lastCursor = nil
+
 
 function Khazix:Draw()
     if myHero.dead then
         return
     end
-    
-    --Draw.Circle(Game.mousePos(), 300,Draw.Color(80 ,0xFF,0xFF,0xFF))
 
-    if LL.Drawing.Q:Value() and Ready(_Q) then
+
+    if self.tyMenu.Drawing.Q:Value() and Ready(_Q) then
         Draw.Circle(myHero.pos, self.QData.Range,Draw.Color(80 ,0xFF,0xFF,0xFF))
     end
 
-    if LL.Drawing.W:Value() and Ready(_W) then
+    if self.tyMenu.Drawing.W:Value() and Ready(_W) then
         Draw.Circle(myHero.pos, self.WData.Range,Draw.Color(80 ,0xFF,0xFF,0xFF))
     end
 
-    if LL.Drawing.E:Value() and Ready(_E) then
+    if self.tyMenu.Drawing.E:Value() and Ready(_E) then
         Draw.Circle(myHero.pos, self.EData.Range,Draw.Color(80 ,0xFF,0xFF,0xFF))
     end
 end
 
 
-local NextTick = GetTickCount()
 
 function Khazix:Tick()
     if myHero.dead or Game.IsChatOpen() or (ExtLibEvade and ExtLibEvade.Evading == true) then
@@ -113,14 +159,10 @@ function Khazix:Tick()
     end
 
     self:UpdateSpell()
-    if NextTick > GetTickCount() then return end
 
-    ORB:SetMovement(true)
-    ORB:SetAttack(true)
-
-    if ORB.Modes[0] then --combo
+    if orbwalker.Modes[0] then --combo
         self:Combo()
-    elseif ORB.Modes[3] then --jungle
+    elseif orbwalker.Modes[3] then --jungle
         self:Jungle()
     end
 
@@ -130,38 +172,38 @@ function Khazix:UpdateSpell()
 
 
     if myHero:GetSpellData(0).name == "KhazixQLong" then
-        self.QData.Range = 375
+        self.Q.Range = 375
     end
 
     if myHero:GetSpellData(1).name == "KhazixWLong" then
-        self.WData.Type = _G.SPELLTYPE_CONE
+        self.W.Type = _G.SPELLTYPE_CONE
     end
 
     if myHero:GetSpellData(2).name == "KhazixELong" then
-        self.EData.Range = 900
+        self.E.Range = 900
     end
 end
 
 function Khazix:Combo()
 
-    if LL.Combo.UseQ:Value() then
-        local target = self:GetHeroTarget(self.QData.Range)
+    if self.tyMenu.Combo.UseQ:Value() then
+        local target = self:GetHeroTarget(self.Q.Range)
         if target ~= nil then
             self:CastQ(target)
         end
     end
 
-    if LL.Combo.UseW:Value() then
-        local target = self:GetHeroTarget(self.WData.Range)
+    if self.tyMenu.Combo.UseW:Value() then
+        local target = self:GetHeroTarget(self.W.Range)
         if target ~= nil then
             self:CastW(target)
         end
     end
 
-    if LL.Combo.UseE:Value()  then
-        local target = self:GetHeroTarget(self.EData.Range)
+    if self.tyMenu.Combo.UseE:Value()  then
+        local target = self:GetHeroTarget(self.E.Range)
         if target ~= nil then
-            self:CastE(target)
+            self:CastE()
         end
     end
 
@@ -169,14 +211,14 @@ function Khazix:Combo()
 end
 
 function Khazix:Jungle()
-    local target = ORB:GetTarget()
+    local target = orbwalker:GetTarget()
     if target ~= nil then
-        if LL.Jungle.UseQ:Value() and Ready(_Q) then
+        if self.tyMenu.Jungle.UseQ:Value() and Ready(_Q) then
             self:CastQ(target)
             return
         end
 
-        if LL.Jungle.UseW:Value() and Ready(_W) and ORB:CanMove(myHero) then
+        if self.tyMenu.Jungle.UseW:Value() and Ready(_W) and orbwalker:CanMove() then
             Control.CastSpell(HK_W, target)
         end
     end
@@ -193,7 +235,7 @@ end
 function Khazix:CastQ(target)
     if not Ready(_Q) then return end
 
-    if myHero.pos:DistanceTo(target.pos) <= self.QData.Range and ORB:CanMove(myHero) then
+    if myHero.pos:DistanceTo(target.pos) <= self.QData.Range and ORB:CanMove() then
         Control.CastSpell(HK_Q, target)
         NextTick = GetTickCount() + 350
         --print("cast Q")
@@ -205,7 +247,7 @@ function Khazix:CastW(target)
     if not Ready(_W) then return end
 
     local Pred = GetGamsteronPrediction(target, self.WData, myHero)
-    if Pred.Hitchance >= _G.HITCHANCE_NORMAL then
+    if Pred.Hitchance >= _G.HITCHANCE_HIGH then
         NextTick = GetTickCount() + 350
         ORB:SetMovement(false)
         ORB:SetAttack(false)
@@ -231,14 +273,14 @@ end
 
 function Khazix:CastE(target)
     if not Ready(_E) then return end
+
     local Pred = GetGamsteronPrediction(target, self.EData, myHero)
-    print(Pred.Hitchance)
     if Pred.Hitchance >= _G.HITCHANCE_HIGH then
         NextTick = GetTickCount() + 450
         ORB:SetMovement(false)
         ORB:SetAttack(false)
         Control.CastSpell(HK_E, Pred.CastPosition)
-        print("cast E")
+        --print("cast E")
 
     end
 
