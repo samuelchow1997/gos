@@ -139,15 +139,15 @@ function Khazix:Draw()
 
 
     if self.tyMenu.Drawing.Q:Value() and Ready(_Q) then
-        Draw.Circle(myHero.pos, self.QData.Range,Draw.Color(80 ,0xFF,0xFF,0xFF))
+        Draw.Circle(myHero.pos, self.Q.Range,Draw.Color(80 ,0xFF,0xFF,0xFF))
     end
 
     if self.tyMenu.Drawing.W:Value() and Ready(_W) then
-        Draw.Circle(myHero.pos, self.WData.Range,Draw.Color(80 ,0xFF,0xFF,0xFF))
+        Draw.Circle(myHero.pos, self.W.Range,Draw.Color(80 ,0xFF,0xFF,0xFF))
     end
 
     if self.tyMenu.Drawing.E:Value() and Ready(_E) then
-        Draw.Circle(myHero.pos, self.EData.Range,Draw.Color(80 ,0xFF,0xFF,0xFF))
+        Draw.Circle(myHero.pos, self.E.Range,Draw.Color(80 ,0xFF,0xFF,0xFF))
     end
 end
 
@@ -194,7 +194,7 @@ function Khazix:Combo()
     end
 
     if self.tyMenu.Combo.UseW:Value() then
-        local target = self:GetHeroTarget(self.W.Range)
+        local target = self:GetHeroTarget(self.tyMenu.Combo.range:Value())
         if target ~= nil then
             self:CastW(target)
         end
@@ -203,7 +203,7 @@ function Khazix:Combo()
     if self.tyMenu.Combo.UseE:Value()  then
         local target = self:GetHeroTarget(self.E.Range)
         if target ~= nil then
-            self:CastE()
+            self:CastE(target)
         end
     end
 
@@ -226,64 +226,47 @@ end
 
 
 function Khazix:GetHeroTarget(range)
-    local EnemyHeroes = OB:GetEnemyHeroes(range, false)
-    local target = TS:GetTarget(EnemyHeroes)
+    local tg = TargetSelector:GetTarget(range)
 
-    return target
+    return tg
 end
 
 function Khazix:CastQ(target)
-    if not Ready(_Q) then return end
+    if not Ready(_Q) or lastQ + 350 >GetTickCount() then return end
 
-    if myHero.pos:DistanceTo(target.pos) <= self.QData.Range and ORB:CanMove() then
+    if myHero.pos:DistanceTo(target.pos) <= self.Q.Range and orbwalker:CanMove() then
         Control.CastSpell(HK_Q, target)
-        NextTick = GetTickCount() + 350
-        --print("cast Q")
+        lastQ = GetTickCount()
+        print("cast Q")
     end
 end
 
 
 function Khazix:CastW(target)
-    if not Ready(_W) then return end
+    if not Ready(_W) or lastW + 350 > GetTickCount() then return end
 
-    local Pred = GetGamsteronPrediction(target, self.WData, myHero)
-    if Pred.Hitchance >= _G.HITCHANCE_HIGH then
-        NextTick = GetTickCount() + 350
-        ORB:SetMovement(false)
-        ORB:SetAttack(false)
-        lastCursor = Game.mousePos()
-        Control.SetCursorPos(Pred.CastPosition)
-
-        DelayAction(function() 
+    local Pred = GetGamsteronPrediction(target, self.W, myHero)
+    if Pred.Hitchance >= _G.HITCHANCE_HIGH and orbwalker:CanMove() then
             Control.CastSpell(HK_W, Pred.CastPosition)
-            --print("cast W "..GetTickCount())
-
-            DelayAction(function()
-                Control.SetCursorPos(lastCursor)
-                --print(GetTickCount())
-            end, 0.1)
-
-        end, 0.01)
-
-
+            lastW = GetTickCount()
+            print("cast W "..GetTickCount())
     end
 
 
 end
 
 function Khazix:CastE(target)
-    if not Ready(_E) then return end
+    if not Ready(_E) or lastE + 350 >GetTickCount() then return end
 
-    local Pred = GetGamsteronPrediction(target, self.EData, myHero)
-    if Pred.Hitchance >= _G.HITCHANCE_HIGH then
-        NextTick = GetTickCount() + 450
-        ORB:SetMovement(false)
-        ORB:SetAttack(false)
+    local Pred = GetGamsteronPrediction(target, self.E, myHero)
+    if Pred.Hitchance >= _G.HITCHANCE_HIGH and orbwalker:CanMove() then
         Control.CastSpell(HK_E, Pred.CastPosition)
-        --print("cast E")
+        lastE = GetTickCount()
+        print("cast E")
 
     end
 
 
 end
 
+Khazix()
