@@ -1,4 +1,4 @@
-local version = 0.05
+local version = 0.07
 
 
 local champ = myHero.charName
@@ -7,7 +7,8 @@ local lua = "14" .. champ
 
 local SupportChampion = {
     ["Lulu"] 	    = 		true,
-    ["Sivir"] 	    = 		true,
+    ["Sivir"] 	    = 		true,    
+    ["Khazix"] 	    = 		true,
     -- ["Brand"] 	    = 		true,
     ["Nautilus"]    = 	    true
 
