@@ -1,4 +1,4 @@
-local version = 0.07
+local version = 0.08
 
 
 local champ = myHero.charName
@@ -10,6 +10,7 @@ local SupportChampion = {
     ["Sivir"] 	    = 		true,    
     ["Khazix"] 	    = 		true,
     -- ["Brand"] 	    = 		true,
+    ["Amumu"] 	    = 		true,
     ["Nautilus"]    = 	    true
 
 
@@ -76,6 +77,7 @@ if SupportChampion[champ] then
 
     else
         AutoUpdate(COMMON_PATH .. AiOPath, lua , 0)
+
     end
 
 else
