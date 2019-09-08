@@ -150,7 +150,6 @@ function Brand:Tick()
     if myHero.dead or Game.IsChatOpen() or (ExtLibEvade and ExtLibEvade.Evading == true) then
         return
     end
-    orbwalker:SetAttack(false)
 
     if orbwalker.Modes[0] then --combo
         self:Combo()
