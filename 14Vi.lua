@@ -1,27 +1,38 @@
 local Version = 0.02
 local ScriptName = "Vi"
 
-if (myHero.charName ~= "Vi") then 
-    return
-end
 
-if not FileExist(COMMON_PATH .. "GamsteronPrediction.lua") then
-	print("GsoPred. installed Press 2x F6")
-	DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GOS-External/master/Common/GamsteronPrediction.lua", COMMON_PATH .. "GamsteronPrediction.lua", function() end)
-	while not FileExist(COMMON_PATH .. "GamsteronPrediction.lua") do end
-end
     
 require('GamsteronPrediction')
-require('GamsteronCore')
 
+local GameHeroCount     = Game.HeroCount
+local GameHero          = Game.Hero
+local TableInsert       = _G.table.insert
+local orbwalker         = _G.SDK.Orbwalker
+local TargetSelector    = _G.SDK.TargetSelector
 local LocalGameTimer = Game.Timer
 local ControlKeyDown = Control.KeyDown
 local ControlKeyUp = Control.KeyUp
 
-local  TS, OB, DMG, SPELLS
 local myHero = myHero
 
-local GamCore = _G.GamsteronCore
+local lastQdown = 0
+local lastQup = 0
+
+local lastE = 0
+local lastR = 0
+local lastIG = 0
+local lastMove = 0
+
+local Enemys =   {}
+local Allys  =   {}
+
+local function GetDistanceSquared(vec1, vec2)
+    local dx = vec1.x - vec2.x
+    local dy = (vec1.z or vec1.y) - (vec2.z or vec2.y)
+    return dx * dx + dy * dy
+end
+
 
 local function IsValid(unit)
     if (unit 
@@ -30,22 +41,45 @@ local function IsValid(unit)
         and unit.alive 
         and unit.visible 
         and unit.networkID 
-        and unit.health > 0) then
+        and unit.health > 0
+        and not unit.dead
+    ) then
         return true;
     end
     return false;
 end
 
 local function Ready(spell)
-    return myHero:GetSpellData(spell).currentCd == 0 and myHero:GetSpellData(spell).level > 0 and myHero:GetSpellData(spell).mana <= myHero.mana and Game.CanUseSpell(spell) == 0
+    return myHero:GetSpellData(spell).currentCd == 0 
+    and myHero:GetSpellData(spell).level > 0 
+    and myHero:GetSpellData(spell).mana <= myHero.mana 
+    and Game.CanUseSpell(spell) == 0
 end
+
+local function OnAllyHeroLoad(cb)
+    for i = 1, GameHeroCount() do
+        local obj = GameHero(i)
+        if obj.isAlly then
+            cb(obj)
+        end
+    end
+end
+
+local function OnEnemyHeroLoad(cb)
+    for i = 1, GameHeroCount() do
+        local obj = GameHero(i)
+        if obj.isEnemy then
+            cb(obj)
+        end
+    end
+end
+
 
 class "Vi"
 
 function Vi:__init()
-    ORB, TS, OB, DMG, SPELLS = _G.SDK.Orbwalker, _G.SDK.TargetSelector, _G.SDK.ObjectManager, _G.SDK.Damage, _G.SDK.Spells
     
-    self.QData = {Type = _G.SPELLTYPE_LINE, Delay = 0.1, Radius = 75, Range = 725, Speed = 1400, Collision = false, UseBoundingRadius = true}
+    self.QData = {Type = _G.SPELLTYPE_LINE, Delay = 0.1, Radius = 75, Range = 725, Speed = 1400, Collision = false}
     self.RData = {Range = 800}
 
     self.Qchannel = false
@@ -53,35 +87,50 @@ function Vi:__init()
 
     self:LoadMenu()
 
+    OnAllyHeroLoad(function(hero)
+        TableInsert(Allys, hero);
+    end)
+
+    OnEnemyHeroLoad(function(hero)
+        TableInsert(Enemys, hero);
+    end)
+
     Callback.Add("Tick", function() self:Tick() end)
     Callback.Add("Draw", function() self:Draw() end)
     Callback.Add('WndMsg', function(...) self:WndMsg(...) end)
 
-    ORB:OnPostAttackTick(function(...) self:OnPostAttackTick(...) end)
+    orbwalker:OnPostAttackTick(function(...) self:OnPostAttackTick(...) end)
 
+    orbwalker:OnPreMovement(
+        function(args)
+            if lastMove + 180 > GetTickCount() then
+                args.Process = false
+            else
+                args.Process = true
+                lastMove = GetTickCount()
+            end
+        end 
+    )
 end
 
 function Vi:LoadMenu()
-    BB = MenuElement({type = MENU, id = "bb", name = "Vi"})
+    self.tyMenu = MenuElement({type = MENU, id = "14Vi", name = "14Vi"})
 
-    BB:MenuElement({type = MENU, id = "Combo", name = "Combo"})
-    BB.Combo:MenuElement({name = "Use spell on:", id = "useon", type = _G.MENU})
-    GamCore:OnEnemyHeroLoad(function(hero) BB.Combo.useon:MenuElement({id = hero.charName, name = hero.charName, value = true}) end)
-    BB.Combo:MenuElement({id = "UseQ", name = "[Q]", value = true})
-    BB.Combo:MenuElement({id = "Num", name = "min Q Range", value = 150, min = 0 , max = 400})
-    BB.Combo:MenuElement({id = "UseE", name = "[E]", value = true})
+    self.tyMenu:MenuElement({type = MENU, id = "Combo", name = "Combo"})
+    self.tyMenu.Combo:MenuElement({name = "Use spell on:", id = "useon", type = _G.MENU})
+    OnEnemyHeroLoad(function(hero) self.tyMenu.Combo.useon:MenuElement({id = hero.charName, name = hero.charName, value = true}) end)
+    self.tyMenu.Combo:MenuElement({id = "UseQ", name = "[Q]", value = true})
+    self.tyMenu.Combo:MenuElement({id = "Num", name = "min Q Range", value = 150, min = 0 , max = 400})
+    self.tyMenu.Combo:MenuElement({id = "UseE", name = "[E]", value = true})
 
-    BB:MenuElement({type = MENU, id = "WaveClear", name = "Wave Clear"})
-    BB.WaveClear:MenuElement({id = "UseE", name = "[E]", value = true})
-
-
-    BB:MenuElement({type = MENU, id = "Drawing", name = "Drawing"})
-    BB.Drawing:MenuElement({id = "Q", name = "Draw [Q] Range", value = true})
-    BB.Drawing:MenuElement({id = "R", name = "Draw [R] Range", value = true})
-    BB.Drawing:MenuElement({id = "Num", name = "Draw min Q Range", value = true})
+    self.tyMenu:MenuElement({type = MENU, id = "WaveClear", name = "Wave Clear"})
+    self.tyMenu.WaveClear:MenuElement({id = "UseE", name = "[E]", value = true})
 
 
-    BB:MenuElement({name ="Author " , drop = {"ty01314"}})
+    self.tyMenu:MenuElement({type = MENU, id = "Drawing", name = "Drawing"})
+    self.tyMenu.Drawing:MenuElement({id = "Q", name = "Draw [Q] Range", value = true})
+    self.tyMenu.Drawing:MenuElement({id = "R", name = "Draw [R] Range", value = true})
+    self.tyMenu.Drawing:MenuElement({id = "Num", name = "Draw min Q Range", value = true})
 
 end
 
@@ -89,14 +138,14 @@ function Vi:Draw()
     if myHero.dead then
         return
     end
-    if BB.Drawing.Q:Value() and Ready(_Q) then
+    if self.tyMenu.Drawing.Q:Value() and Ready(_Q) then
         Draw.Circle(myHero.pos, 725,Draw.Color(255,255, 162, 000))
     end
-    if BB.Drawing.R:Value() and Ready(_R) then
+    if self.tyMenu.Drawing.R:Value() and Ready(_R) then
         Draw.Circle(myHero.pos, 800,Draw.Color(80 ,0xFF,0xFF,0xFF))
     end
-    if BB.Drawing.Num:Value() and Ready(_Q) then
-        Draw.Circle(myHero.pos, BB.Combo.Num:Value(),Draw.Color(255,255, 162, 000))
+    if self.tyMenu.Drawing.Num:Value() and Ready(_Q) then
+        Draw.Circle(myHero.pos, self.tyMenu.Combo.Num:Value(),Draw.Color(255,255, 162, 000))
     end
 end
 
@@ -107,44 +156,45 @@ function Vi:Tick()
 
     self:Qmanager()
 
-    if ORB.Modes[0] then --combo
+    if orbwalker.Modes[0] then --combo
         self:Combo()
-    elseif ORB.Modes[1] then --harass
+    elseif orbwalker.Modes[1] then --harass
         --self:Harass()
     end
 
 end
 
 function Vi:Combo()
-    local EnemyHeroes = OB:GetEnemyHeroes(625, false)
     local targetList = {}
+    local target
 
-    for i = 1, #EnemyHeroes do
-        local hero = EnemyHeroes[i]
-        local heroName = hero.charName
-        if BB.Combo.useon[heroName] and BB.Combo.useon[heroName]:Value() then
-            targetList[#targetList + 1] = hero
+    for i = 1, #Enemys do
+        local enemy = Enemys[i]
+        local heroName = enemy.charName
+        if self.tyMenu.Combo.useon[heroName] and self.tyMenu.Combo.useon[heroName]:Value() then
+            targetList[#targetList + 1] = enemy
         end
     end
 
-    local target = TS:GetTarget(targetList)
-    if target == nil then return end
-
-    if IsValid(target) then
-        if BB.Combo.UseQ:Value() and Ready(_Q) and  self.Qchannel == false 
-            and myHero.pos:DistanceTo(target.pos) <= 625 
-            and myHero.pos:DistanceTo(target.pos) > BB.Combo.Num:Value() then
+    target = self:GetTarget(targetList, self.QData.Range)
+    
+    if target and IsValid(target) then
+        if self.tyMenu.Combo.UseQ:Value() and Ready(_Q) and  self.Qchannel == false 
+            and myHero.pos:DistanceTo(target.pos) <= 625 and lastQdown + 150 < GetTickCount()
+            and myHero.pos:DistanceTo(target.pos) > self.tyMenu.Combo.Num:Value() then
             ControlKeyDown(HK_Q)
+            lastQdown = GetTickCount()
             self.Qchannel = true
             self.Qtimer = LocalGameTimer()
         end
 
         if LocalGameTimer() > self.Qtimer + 1.25 and LocalGameTimer() < self.Qtimer + 6 
-            and self.Qchannel and Ready(_Q) and BB.Combo.UseQ:Value() then
+            and self.Qchannel and Ready(_Q) and self.tyMenu.Combo.UseQ:Value() and  lastQup + 150 < GetTickCount() then
                 local Pred = GetGamsteronPrediction(target, self.QData, myHero)
                 if Pred.Hitchance >= _G.HITCHANCE_HIGH then
                     Control.SetCursorPos(Pred.CastPosition)
                     ControlKeyUp(HK_Q)
+                    lastQup = GetTickCount()
                     self.Qchannel = false
                 end
         end
@@ -158,27 +208,23 @@ local nextETime = 0
 function Vi:OnPostAttackTick()
     if nextETime > LocalGameTimer() then return end
 
-    local target = ORB:GetTarget()
+    local target = orbwalker:GetTarget()
 
     if target == nil then return end
 
     if target.type == Obj_AI_Hero then
-        if BB.Combo.UseE:Value() and Ready(_E) then
+        if self.tyMenu.Combo.UseE:Value() and Ready(_E) then
             Control.CastSpell(HK_E) 
-            ORB:__OnAutoAttackReset()
+            orbwalker:__OnAutoAttackReset()
             nextETime = LocalGameTimer() + 0.2
         end
-    elseif target.team == GamCore.TEAM_JUNGLE then
-        if BB.WaveClear.UseE:Value() and Ready(_E) then
+    elseif target.team == 300 then
+        if self.tyMenu.WaveClear.UseE:Value() and Ready(_E) then
             Control.CastSpell(HK_E)
-            ORB:__OnAutoAttackReset()
+            orbwalker:__OnAutoAttackReset()
             nextETime = LocalGameTimer() + 0.2
         end
     end
-end
-
-function Vi:GetAttackTarget()
-
 end
 
 
@@ -202,6 +248,17 @@ function Vi:WndMsg(msg, wParam)
     end
 end
 
-function OnLoad()
-    _G[myHero.charName]()
+function Vi:GetTarget(list, range)
+    local targetList = {}
+
+    for i = 1, #list do
+        local hero = list[i]
+        if GetDistanceSquared(hero.pos, myHero.pos) < range * range then
+            targetList[#targetList + 1] = hero
+        end
+    end
+
+    return TargetSelector:GetTarget(targetList)
 end
+
+Vi()

@@ -1,4 +1,4 @@
-local version = 0.11
+local version = 0.12
 
 
 local champ = myHero.charName
@@ -13,7 +13,8 @@ local SupportChampion = {
     ["Amumu"] 	    = 		true,
     ["Nautilus"]    = 	    true,
     ["Morgana"]     =       true,
-    ["Blitzcrank"]  =       true
+    ["Blitzcrank"]  =       true,
+    ["Vi"]          =       true
 }
 
 
