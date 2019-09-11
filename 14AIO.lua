@@ -1,8 +1,7 @@
-local version = 0.16
+local version = 0.17
 
 
 local champ = myHero.charName
-print(champ)
 local AiOPath = "14AiO\\"
 local lua = "14" .. champ
 
@@ -16,7 +15,9 @@ local SupportChampion = {
     ["Morgana"]     =       true,
     ["Blitzcrank"]  =       true,
     ["Vi"]          =       true,
-    ["Zilean"]      =       true
+    ["Zilean"]      =       true,
+    ["Yasuo"]       =       true
+
 }
 
 
