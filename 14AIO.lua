@@ -1,4 +1,4 @@
-local version = 0.14
+local version = 0.15
 
 
 local champ = myHero.charName
@@ -54,7 +54,7 @@ local function AutoUpdate(pth, nm, vs)
         DownloadFile(Files.Lua.Url, Files.Lua.Path, Files.Lua.Name)
         print("New"..nm.. "Version Press 2x F6")
     else
-        print(Files.Version.Name .. ": No Updates Found")
+        print(nm ..NewVersion..": No Updates Found")
     end
 
 end
