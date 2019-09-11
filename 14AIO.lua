@@ -1,4 +1,4 @@
-local version = 0.15
+local version = 0.16
 
 
 local champ = myHero.charName
@@ -54,7 +54,7 @@ local function AutoUpdate(pth, nm, vs)
         DownloadFile(Files.Lua.Url, Files.Lua.Path, Files.Lua.Name)
         print("New"..nm.. "Version Press 2x F6")
     else
-        print(nm ..NewVersion..": No Updates Found")
+        print(nm.." V"..NewVersion..": No Updates Found")
     end
 
 end
@@ -78,7 +78,7 @@ if SupportChampion[champ] then
         Callback.Add("Load", function() 
             DelayAction(function()
                 require(AiOPath .. lua) 
-            end, 3000)
+            end, 0.5)
         end)
 
     else
