@@ -2,6 +2,7 @@ local version = 0.16
 
 
 local champ = myHero.charName
+print(champ)
 local AiOPath = "14AiO\\"
 local lua = "14" .. champ
 
@@ -76,9 +77,7 @@ if SupportChampion[champ] then
         AutoUpdate(COMMON_PATH .. AiOPath, lua , championVs)
 
         Callback.Add("Load", function() 
-            DelayAction(function()
                 require(AiOPath .. lua) 
-            end, 0.5)
         end)
 
     else
