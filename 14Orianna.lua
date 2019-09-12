@@ -1,38 +1,41 @@
-if myHero.charName ~= 'Orianna' then return end
-
-if not FileExist(COMMON_PATH .. "GamsteronPrediction.lua") then
-	print("GsoPred. installed Press 2x F6")
-	DownloadFileAsync("https://raw.githubusercontent.com/gamsteron/GOS-External/master/Common/GamsteronPrediction.lua", COMMON_PATH .. "GamsteronPrediction.lua", function() end)
-	while not FileExist(COMMON_PATH .. "GamsteronPrediction.lua") do end
-end
-
-local  TS, OB, DMG, SPELLS
 require('GamsteronPrediction')
 
 local myHero = myHero
 local GameMissileCount = Game.MissileCount
 local GameMissile = Game.Missile
 
+local GameHeroCount     = Game.HeroCount
+local GameHero          = Game.Hero
+local TableInsert       = _G.table.insert
 
-GamCore = _G.GamsteronCore
+local orbwalker         = _G.SDK.Orbwalker
+local TS    = _G.SDK.TargetSelector
+local OB                 = _G.SDK.ObjectManager
 
 local ballPos = {pos = myHero.pos, ground = false, selfball = false, canW = true}
 local lastRTick = 0
 local lastQTick = 0
 local lastEWTick = 0
+local lastMove = 0
 
+local Enemys =   {}
+local Allys  =   {}
+
+local function GetDistanceSquared(vec1, vec2)
+    local dx = vec1.x - vec2.x
+    local dy = (vec1.z or vec1.y) - (vec2.z or vec2.y)
+    return dx * dx + dy * dy
+end
 
 local function IsValid(unit)
-    if (unit 
-        and unit.valid 
-        and unit.isTargetable 
-        and unit.alive 
-        and unit.visible 
-        and unit.networkID 
-        and unit.health > 0) then
-        return true;
-    end
-    return false;
+    return  unit 
+            and unit.valid 
+            and unit.isTargetable 
+            and unit.alive 
+            and unit.visible 
+            and unit.networkID 
+            and unit.health > 0
+            and not unit.dead
 end
 
 local function Ready(spell)
@@ -42,22 +45,36 @@ local function Ready(spell)
     and Game.CanUseSpell(spell) == 0
 end
 
-function OnLoad()
-    _G[myHero.charName]()
+local function OnAllyHeroLoad(cb)
+    for i = 1, GameHeroCount() do
+        local obj = GameHero(i)
+        if obj.isAlly then
+            cb(obj)
+        end
+    end
+end
+
+local function OnEnemyHeroLoad(cb)
+    for i = 1, GameHeroCount() do
+        local obj = GameHero(i)
+        if obj.isEnemy then
+            cb(obj)
+        end
+    end
 end
 
 class "Orianna"
 
 function Orianna:__init()
-    ORB, TS, OB, DMG, SPELLS = _G.SDK.Orbwalker, _G.SDK.TargetSelector, _G.SDK.ObjectManager, _G.SDK.Damage, _G.SDK.Spells
+
     self.QData = {
         Type = _G.SPELLTYPE_LINE, 
         Delay = 0, Radius = 130, 
         Range = 1250, Speed = 1400,
         Collision = true, 
         MaxCollision = 0, 
-        CollisionTypes = {_G.COLLISION_YASUOWALL},
-        UseBoundingRadius = true
+        CollisionTypes = {_G.COLLISION_YASUOWALL}
+        
 
     }
     self.WData = {
@@ -91,7 +108,7 @@ function Orianna:LoadMenu()
     TY.combo:MenuElement({id = "Rmax", name = "Only Use R if taret HP < X % ", value = 50, min = 0, max = 100, step = 1})
     TY.combo:MenuElement({id = "Rmin", name = "Only Use R if taret HP > X % ", value = 10, min = 0, max = 100, step = 1})
     TY.combo:MenuElement({name = "Use R on:", id = "useon", type = _G.MENU})
-    GamCore:OnEnemyHeroLoad(function(hero) TY.AutoQ.useon:MenuElement({id = hero.charName, name = hero.charName, value = true}) end)
+    OnEnemyHeroLoad(function(hero) TY.combo.useon:MenuElement({id = hero.charName, name = hero.charName, value = true}) end)
 
 
     TY:MenuElement({type = MENU, id = "harass", name = "Harass"})
@@ -99,7 +116,7 @@ function Orianna:LoadMenu()
 
     TY:MenuElement({type = MENU, id = "AutoQ", name = "Auto Q"})
     TY.AutoQ:MenuElement({name = "Use spell on:", id = "useon", type = _G.MENU})
-    GamCore:OnEnemyHeroLoad(function(hero) TY.AutoQ.useon:MenuElement({id = hero.charName, name = hero.charName, value = true}) end)
+    OnEnemyHeroLoad(function(hero) TY.AutoQ.useon:MenuElement({id = hero.charName, name = hero.charName, value = true}) end)
     TY.AutoQ:MenuElement({id = "UseQ", name = "Q", value = true})
 
     TY:MenuElement({type = MENU, id = "AutoR", name = "Auto R"})
@@ -136,7 +153,7 @@ function Orianna:LoadMenu()
     TY.Drawing.BColor:MenuElement({id = "B", name = "Blue ", value = 150, min = 0, max = 255, step = 1})
 
 
-    TY.Drawing:MenuElement({id = "W", name = "Draw [W] Range", value = true})
+    TY.Drawing:MenuElement({id = "W", name = "Draw [W] Range", value = false})
 
     TY.Drawing:MenuElement({type = MENU, id = "WColor", name = "W Range Color"})
     TY.Drawing.WColor:MenuElement({id = "T", name = "Transparency ", value = 255, min = 0, max = 255, step = 1})
@@ -157,8 +174,8 @@ end
 function Orianna:Tick()
 
     if lastQTick + 50 < GetTickCount() then
-        ORB:SetAttack(true)
-        ORB:SetMovement(true)
+        orbwalker:SetAttack(true)
+        orbwalker:SetMovement(true)
     end
 
     self:LoadBallPos()
@@ -169,9 +186,9 @@ function Orianna:Tick()
 
     ballPos.canW = true
 
-    if ORB.Modes[0] then --combo
+    if orbwalker.Modes[0] then --combo
         self:Combo()
-    elseif ORB.Modes[1] then --harass
+    elseif orbwalker.Modes[1] then --harass
         self:Harass()
     end
 
@@ -216,7 +233,7 @@ function Orianna:Combo()
         end
 
         if TY.combo.UseW:Value() and Ready(_W) and ballPos.pos:DistanceTo(target.pos) <= self.WData.Radius and ballPos.canW then
-            --print("cast W")
+            print("cast W")
             lastEWTick = GetTickCount()
             Control.CastSpell(HK_W)
         end
@@ -228,7 +245,7 @@ function Orianna:Combo()
             if collisionCount >= 1 then
                 lastEWTick = GetTickCount()
                 Control.CastSpell(HK_E, myHero)
-                --print("cast E")
+                print("cast E")
 
             end
         end
@@ -238,7 +255,7 @@ function Orianna:Combo()
             if delayPos:DistanceTo(ballPos.pos) <= 370 then
                 lastRTick = GetTickCount()
                 Control.CastSpell(HK_R)
-                --print("cast R")
+                print("cast R")
 
             end
         end
@@ -318,7 +335,7 @@ function Orianna:AutoR()
         if count >= TY.AutoR.Count:Value() then
             lastRTick = GetTickCount()
             Control.CastSpell(HK_R)
-            --print("Auto R")
+            print("Auto R")
 
         end
 
@@ -334,11 +351,11 @@ function Orianna:CastQ(target)
         and  myHero.pos:DistanceTo(Pred.CastPosition)<= 825
         then
             lastQTick = GetTickCount()
-            ORB:SetAttack(false)
-            ORB:SetMovement(false)
+            orbwalker:SetAttack(false)
+            orbwalker:SetMovement(false)
             Control.CastSpell(HK_Q, Pred.CastPosition)
             ballPos.canW = false
-            --print("cast Q")
+            print("cast Q")
 
         end
     end
@@ -348,8 +365,8 @@ function Orianna:LoadBallPos()
     for i = 1, GameMissileCount() do
         local missile = GameMissile(i)
         if missile.missileData.name == "OrianaIzuna" then
-            --local vetor  = Vector(missile.missileData.endPos.x, missile.missileData.endPos.y, missile.missileData.endPos.z)
-            local vetor = missile.pos
+            local vetor  = Vector(missile.missileData.endPos.x, missile.missileData.endPos.y, missile.missileData.endPos.z)
+            -- local vetor = missile.pos
             ballPos.pos = vetor
             ballPos.ground = true
             ballPos.selfball = false
@@ -392,3 +409,5 @@ end
 function Orianna:GetHP(target)
     return target.health/target.maxHealth * 100
 end
+
+Orianna()
