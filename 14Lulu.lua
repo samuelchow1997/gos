@@ -190,8 +190,12 @@ function Lulu:__init()
             if lastMove + 180 > GetTickCount() then
                 args.Process = false
             else
-                args.Process = true
-                lastMove = GetTickCount()
+                if ExtLibEvade and ExtLibEvade.Evading == true then
+                    args.Process = false
+                else
+                    args.Process = true
+                    lastMove = GetTickCount()
+                end
             end
         end 
     )
@@ -392,15 +396,18 @@ end
 function Lulu:Interrupt()
     if not Ready(_W) or lastW +250 > GetTickCount()  then return end
     for enemyk , enemy in pairs(Enemys) do 
-        if myHero.pos:DistanceTo(enemy.pos) < self.W.Range then
+        if myHero.pos:DistanceTo(enemy.pos) < self.W.Range and IsValid(enemy) then
             if enemy.activeSpell.valid  and self.tyMenu.autoW.interrupt[enemy.activeSpell.name] and self.tyMenu.autoW.interrupt[enemy.activeSpell.name]:Value() then
                 Control.CastSpell(HK_W, enemy.pos)
                 lastW = GetTickCount()
+                print("active spell interrupt")
                 return
             end
 
             if self.tyMenu.autoW.interrupt[enemy.charName] and self.tyMenu.autoW.interrupt[enemy.charName]:Value() and self.ChannelingBuffs[enemy.charName]  then
                 Control.CastSpell(HK_W, enemy.pos)
+                print("ChannelingBuffs interrupt")
+
                 lastW = GetTickCount()
                 return
             end
@@ -542,13 +549,14 @@ end
 
 function Lulu:IG()
     if myHero:GetSpellData(SUMMONER_1).name ~= "SummonerDot" and myHero:GetSpellData(SUMMONER_2).name ~= "SummonerDot" then return end
-    if lastIG + 150 > GetTickCount() then return end
+    if lastIG + 150 > GetTickCount() or not orbwalker.Modes[0] then return end
     local IGdamage = 50 + 20 * myHero.levelData.lvl
     for enemyk , enemy in pairs(Enemys) do 
         if IsValid(enemy) and enemy.pos:DistanceTo(myHero.pos) < 600 then
             if myHero:GetSpellData(SUMMONER_1).name == "SummonerDot" and myHero:GetSpellData(SUMMONER_1).currentCd == 0 then
                 if IGdamage >= enemy.health then
                     Control.CastSpell(HK_SUMMONER_1, enemy.pos)
+                    print("IG")
                     lastIG = GetTickCount()
                     return
                 end
