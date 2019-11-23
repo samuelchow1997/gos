@@ -1,4 +1,4 @@
-local version = 0.19
+local version = 0.2
 
 
 local champ = myHero.charName
@@ -18,7 +18,8 @@ local SupportChampion = {
     ["Zilean"]      =       true,
     ["Yasuo"]       =       true,
     ["Orianna"]     =       true,
-    ["Leona"]       =       true
+    ["Leona"]       =       true,
+    ["Senna"]       =       true
 
 }
 
