@@ -69,7 +69,7 @@ end
 class "Blitzcrank"
 
 function Blitzcrank:__init()
-    self.Q = {Type = _G.SPELLTYPE_LINE, Delay = 0.25, Radius = 70, Range = 925, Speed = 1800, Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL}}
+    self.Q = {Type = _G.SPELLTYPE_LINE, Delay = 0.25, Radius = 70, Range = 1100, Speed = 1800, Collision = true, MaxCollision = 0, CollisionTypes = {_G.COLLISION_MINION, _G.COLLISION_YASUOWALL}}
     self.R = {range = 600}
 
     self:LoadMenu()
@@ -111,8 +111,8 @@ function Blitzcrank:LoadMenu()
     self.tyMenu.Combo:MenuElement({name = "Use spell on:", id = "useon", type = _G.MENU})
     OnEnemyHeroLoad(function(hero) self.tyMenu.Combo.useon:MenuElement({id = hero.charName, name = hero.charName, value = true}) end)
     self.tyMenu.Combo:MenuElement({id = "UseQ", name = "[Q]", value = true})
-    self.tyMenu.Combo:MenuElement({id = "range", name = "Max Cast Q In range", value = 1100, min = 1, max = 1000, step = 1})
-    self.tyMenu.Combo:MenuElement({id = "minRange", name = "Min Cast Q In range", value = 0, min = 0, max = 1000, step = 1})
+    self.tyMenu.Combo:MenuElement({id = "range", name = "Max Cast Q In range", value = 1100, min = 1, max = 1100, step = 1})
+    self.tyMenu.Combo:MenuElement({id = "minRange", name = "Min Cast Q In range", value = 0, min = 0, max = 1100, step = 1})
     self.tyMenu.Combo:MenuElement({id = "UseE", name = "[E] before AA", value = true})
     self.tyMenu.Combo:MenuElement({id = "UseR", name = "[R]", value = true})
     self.tyMenu.Combo:MenuElement({id = "Count", name = "When Can Hit X Enemies ", value = 2, min = 1, max = 5, step = 1})
@@ -122,7 +122,7 @@ function Blitzcrank:LoadMenu()
     self.tyMenu.Harass:MenuElement({name = "Use spell on:", id = "useon", type = _G.MENU})
     OnEnemyHeroLoad(function(hero) self.tyMenu.Harass.useon:MenuElement({id = hero.charName, name = hero.charName, value = true}) end)
     self.tyMenu.Harass:MenuElement({id = "UseQ", name = "Q", value = true})
-    self.tyMenu.Harass:MenuElement({id = "range", name = "Max Cast Q In range", value = 1000, min = 1, max = 1000, step = 1})
+    self.tyMenu.Harass:MenuElement({id = "range", name = "Max Cast Q In range", value = 1000, min = 1, max = 1100, step = 1})
 
 
     --Auto
