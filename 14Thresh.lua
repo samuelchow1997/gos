@@ -3,6 +3,7 @@
 
 local orbwalker         = _G.SDK.Orbwalker
 local TargetSelector    = _G.SDK.TargetSelector
+local ObjectManager     = _G.SDK.ObjectManager
 local GameHeroCount     = Game.HeroCount
 local GameHero          = Game.Hero
 local TableInsert       = _G.table.insert
@@ -142,7 +143,6 @@ function Thresh:LoadMenu()
     self.tyMenu.Drawing:MenuElement({id = "Q", name = "Draw [Q] Range", value = true})
     self.tyMenu.Drawing:MenuElement({id = "E", name = "Draw [E] Range", value = true})
 
-    self.tyMenu:MenuElement({name ="Version " , drop = {Version}})
 
 end
 
@@ -184,14 +184,14 @@ function Thresh:Tick()
     self:AntiE()
 
     if Ready(_E) and self.tyMenu.E.Auto:Value() then
-        ORB:SetAttack(false)
+        orbwalker:SetAttack(false)
     else
-        ORB:SetAttack(true)
+        orbwalker:SetAttack(true)
     end
 
-    if ORB.Modes[0] then --combo
+    if orbwalker.Modes[0] then --combo
         self:Combo()
-    elseif ORB.Modes[1] then --harass
+    elseif orbwalker.Modes[1] then --harass
         self:Harass()
     end
 
@@ -200,99 +200,108 @@ function Thresh:Tick()
 end
 
 function Thresh:Combo()
-    local EnemyHeroes = OB:GetEnemyHeroes(1000, false)
     local targetList = {}
+    local target
 
-    for i = 1, #EnemyHeroes do
-        local hero = EnemyHeroes[i]
-        local heroName = hero.charName
+    for i = 1, #Enemys do
+        local enemy = Enemys[i]
+        local heroName = enemy.charName
         if self.tyMenu.Q.ComboOn[heroName] and self.tyMenu.Q.ComboOn[heroName]:Value() then
-            targetList[#targetList + 1] = hero
+            targetList[#targetList + 1] = enemy
         end
     end
 
-    local target = TS:GetTarget(targetList)
-    if target == nil then return end
-    if IsValid(target) then
-        if self.tyMenu.Q.Combo:Value() and Ready(_Q) and myHero.pos:DistanceTo(target.pos) <= 1000 and lastQ + 500 < GetTickCount() then
+    target = self:GetTarget(targetList, self.QData.Range)
+
+
+    if target and IsValid(target) then
+        if self.tyMenu.Q.Combo:Value() and Ready(_Q) and myHero.pos:DistanceTo(target.pos) <= 1000 and lastQ + 1000 < GetTickCount() then
             local Pred = GetGamsteronPrediction(target, self.QData, myHero)
             if Pred.Hitchance >= _G.HITCHANCE_HIGH then
                 Control.CastSpell(HK_Q, Pred.CastPosition)
                 lastQ = GetTickCount()
             end
         end
-
-        if self.tyMenu.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 450 then
-            pre = self:GetPosE(target.pos)
-            Control.CastSpell(HK_E, pre)
-        end
-
     end
 
-    local nearby = #OB:GetEnemyHeroes(420, false)
+    target = self:GetTarget(targetList, self.EData.Range)
+    if target and IsValid(target) and self.tyMenu.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 450 and lastE + 1000 < GetTickCount() then
+        pre = self:GetPosE(target.pos)
+        Control.CastSpell(HK_E, pre)
+        lastE = GetTickCount()
+    end
 
-    if Ready(_R) and self.tyMenu.R.Combo:Value() and nearby >= self.tyMenu.R.Count:Value() then
+    local nearby = #ObjectManager:GetEnemyHeroes(420, false)
+
+    if Ready(_R) and self.tyMenu.R.Combo:Value() and nearby >= self.tyMenu.R.Count:Value() and lastR + 1000 < GetTickCount() then
         Control.CastSpell(HK_R)
+        lastR = GetTickCount()
     end
 
 end
 
 function Thresh:Harass()
-    local EnemyHeroes = OB:GetEnemyHeroes(1000, false)
     local targetList = {}
+    local target
 
-    for i = 1, #EnemyHeroes do
-        local hero = EnemyHeroes[i]
-        local heroName = hero.charName
+    for i = 1, #Enemys do
+        local enemy = Enemys[i]
+        local heroName = enemy.charName
         if self.tyMenu.Q.HarassOn[heroName] and self.tyMenu.Q.HarassOn[heroName]:Value() then
-            targetList[#targetList + 1] = hero
+            targetList[#targetList + 1] = enemy
         end
     end
 
-    local target = TS:GetTarget(targetList)
-    if target == nil then return end
-    if IsValid(target) then
-        if self.tyMenu.Q.Harass:Value() and Ready(_Q) and myHero.pos:DistanceTo(target.pos) <= 1000 then
+    target = self:GetTarget(targetList, self.QData.Range)
+
+
+    if target and IsValid(target) then
+        if self.tyMenu.Q.Harass:Value() and Ready(_Q) and myHero.pos:DistanceTo(target.pos) <= 1000 and lastQ + 1000 < GetTickCount() then
             local Pred = GetGamsteronPrediction(target, self.QData, myHero)
             if Pred.Hitchance >= _G.HITCHANCE_HIGH then
-                NextTick = GetTickCount() + 500
                 Control.CastSpell(HK_Q, Pred.CastPosition)
+                lastQ = GetTickCount()
+
             end
         end
 
-        if self.tyMenu.E.Combo:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 450 then
+        if self.tyMenu.E.Harass:Value() and Ready(_E) and myHero.pos:DistanceTo(target.pos) <= 450 and lastE + 1000 < GetTickCount() then
             pre = self:GetPosE(target.pos)
             Control.CastSpell(HK_E, pre)
+            lastE = GetTickCount()
         end
 
     end
 end
 
 function Thresh:Auto()
-    local nearby = #OB:GetEnemyHeroes(420, false)
-    if Ready(_R) and nearby >= self.tyMenu.R.Auto:Value() then
+    local nearby = #ObjectManager:GetEnemyHeroes(420, false)
+    if Ready(_R) and nearby >= self.tyMenu.R.Auto:Value() and lastR + 1000 < GetTickCount() then
         Control.CastSpell(HK_R)
+        lastR = GetTickCount()
     end
 
 
     local IGdamage = 50 + 20 * myHero.levelData.lvl
-    local EnemyHeroes = OB:GetEnemyHeroes(600,false)
+    local EnemyHeroes = ObjectManager:GetEnemyHeroes(600,false)
     if next(EnemyHeroes) == nil then return end
     for i = 1, #EnemyHeroes do
         local target = EnemyHeroes[i]
 
         if self.tyMenu.Auto.AutoIG:Value() then
-            if myHero:GetSpellData(SUMMONER_1).name == "SummonerDot" and myHero:GetSpellData(SUMMONER_1).currentCd == 0 then
+            if myHero:GetSpellData(SUMMONER_1).name == "SummonerDot" and myHero:GetSpellData(SUMMONER_1).currentCd == 0 and lastIG + 1000 < GetTickCount()  then
                 if IGdamage >= target.health then
                     Control.CastSpell(HK_SUMMONER_1, target.pos)
+                    lastIG = GetTickCount()
                 end
             end
             
 
             
-            if myHero:GetSpellData(SUMMONER_2).name == "SummonerDot" and myHero:GetSpellData(SUMMONER_2).currentCd == 0 then
+            if myHero:GetSpellData(SUMMONER_2).name == "SummonerDot" and myHero:GetSpellData(SUMMONER_2).currentCd == 0 and lastIG + 1000 < GetTickCount()  then
                 if IGdamage >= target.health then
                     Control.CastSpell(HK_SUMMONER_2, target.pos)
+                    lastIG = GetTickCount()
                 end
             end
         end
@@ -300,27 +309,27 @@ function Thresh:Auto()
 end
 
 function Thresh:AutoE()
-    local EnemyHeroes = OB:GetEnemyHeroes(465, false)
+    local EnemyHeroes = ObjectManager:GetEnemyHeroes(465, false)
     if next(EnemyHeroes) == nil then  return  end
     for i = 1, #EnemyHeroes do
         local target = EnemyHeroes[i]
         local heroName = target.charName
-        if Ready(_E) and self.tyMenu.E.AutoE[heroName] and self.tyMenu.E.AutoE[heroName]:Value() then
+        if Ready(_E) and self.tyMenu.E.AutoE[heroName] and self.tyMenu.E.AutoE[heroName]:Value() and lastE + 1000 < GetTickCount() then
             pre = self:GetPosE(target.pos)
-            NextTick = GetTickCount() + 250
             Control.CastSpell(HK_E, pre)
+            lastE = GetTickCount()
         end
     end
 
 end
 
 function Thresh:AntiE()
-    local EnemyHeroes = OB:GetEnemyHeroes(475, false)
+    local EnemyHeroes = ObjectManager:GetEnemyHeroes(475, false)
     if next(EnemyHeroes) == nil then  return  end
         for i = 1, #EnemyHeroes do
         local target = EnemyHeroes[i]
         local heroName = target.charName
-        if Ready(_E) and self.tyMenu.E.AntiE[heroName] and self.tyMenu.E.AntiE[heroName]:Value() then
+        if Ready(_E) and self.tyMenu.E.AntiE[heroName] and self.tyMenu.E.AntiE[heroName]:Value() and lastE + 1000 < GetTickCount() then
     
             if target.pathing.isDashing and target.pathing.dashSpeed>870 then
 
@@ -328,7 +337,7 @@ function Thresh:AntiE()
                 --print(delay)
                 local pos = target:GetPrediction(target.pathing.dashSpeed, delay)
                 local pre = self:GetPosE(pos)
-                NextTick = GetTickCount() + 250
+                lastE = GetTickCount()
                 --print(target.pathing.dashSpeed)
                 Control.CastSpell(HK_E, pre)
 
@@ -344,5 +353,17 @@ function Thresh:GetPosE(pos, mode) --RMAN
 	return myHero.pos:Extended(pos, self.EData.Range * (push and 1 or -1))
 end
 
+function Thresh:GetTarget(list, range)
+    local targetList = {}
+
+    for i = 1, #list do
+        local hero = list[i]
+        if GetDistanceSquared(hero.pos, myHero.pos) < range * range then
+            targetList[#targetList + 1] = hero
+        end
+    end
+
+    return TargetSelector:GetTarget(targetList)
+end
 
 Thresh()
