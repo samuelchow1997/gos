@@ -173,7 +173,7 @@ function Ryze:Combo()
 
     target = self:GetTarget(Enemys, self.W.Range)
     if target and IsValid(target) and self.tyMenu.Combo.UseW:Value() then
-        if not Ready(_Q) and orbwalker:CanMove() and Ready(_W) and lastW +260 < GetTickCount()  then
+        if not Ready(_Q) and orbwalker:CanMove() and Ready(_W) and lastW +260 < GetTickCount() and myHero.mana >= (self:GetSpellMana("Q") + self:GetSpellMana("W"))  then
             local casted = Control.CastSpell(HK_W, target)
             if casted then
                 lastW = GetTickCount()
@@ -185,7 +185,7 @@ function Ryze:Combo()
     
     target = self:GetTarget(Enemys, self.E.Range)
     if target and IsValid(target) and self.tyMenu.Combo.UseE:Value() then
-        if not Ready(_Q) and orbwalker:CanMove() and Ready(_E) and lastE +260 < GetTickCount()  then
+        if not Ready(_Q) and orbwalker:CanMove() and Ready(_E) and lastE +260 < GetTickCount() and myHero.mana >= (self:GetSpellMana("Q") + self:GetSpellMana("E"))  then
             local casted = Control.CastSpell(HK_E, target)
             if casted then
                 lastE = GetTickCount()
@@ -231,7 +231,18 @@ function Ryze:DisableAAcheck()
     end
 end
 
+function Ryze:GetSpellMana(spell)
+    if spell == "Q" then
+        return 40
+    end
+    if spell == "W" then
+        return ({40,55,70,85,100})[myHero:GetSpellData(1).level]
+    end
+    if spell == "E" then
+        return ({40,55,70,85,100})[myHero:GetSpellData(2).level]
+    end
 
+end
 
 function Ryze:GetTarget(list, range)
     local targetList = {}
