@@ -1,4 +1,4 @@
-local version = 0.22
+local version = 0.23
 
 
 local champ = myHero.charName
@@ -20,7 +20,8 @@ local SupportChampion = {
     ["Orianna"]     =       true,
     ["Leona"]       =       true,
     ["Senna"]       =       true,
-    ["Thresh"]      =       true
+    ["Thresh"]      =       true,
+    ["Ryze"]        =       true
 
 }
 
@@ -84,8 +85,8 @@ if SupportChampion[champ] then
         Callback.Add("Load", function() 
             DelayAction(function()
                 if not _G._14AIO then
-                    require(AiOPath .. lua)
                     _G._14AIO = true
+                    require(AiOPath .. lua)
                 end
             end, 1)  
         end)
