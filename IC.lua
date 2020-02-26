@@ -3097,7 +3097,7 @@ class "__Orbwalker"
 				return;
 			end
 		end
-		--print("Resetted")
+		-- print("Resetted")
 		self.AutoAttackResetted = true;
 		self.LastAutoAttackSent = 0;
 	end
